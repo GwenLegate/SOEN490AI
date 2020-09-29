@@ -1,0 +1,3 @@
+pickleshare
+matplotlib
+pandas
