@@ -11,8 +11,8 @@ by Google colab using the jupyter notebook "execute_ai_training.ipynb" located i
 
 ### Set up PyTorch Environment:
 
-go to https://pytorch.org under the "Quick start locally" header select your configuration and copy the command that is 
-generated in the "run this command" space.
+go to https://pytorch.org under the "Quick start locally" header select your configuration (you will nee CUDA to make 
+your verion of PyTorch usable on an GPU) and copy the command that is generated in the "run this command" space.
 
 Run the command copied in the previous step in the console. running this command should automatically install 
 numpy, future, pillow and torchvision.
@@ -29,6 +29,15 @@ for the project
 download required datasets to the proper directory in the datasets directory (the directory structure exists but 
 they are empty) you will need them when you are working on the scripts but they are too large to push to the 
 repository.
+
+### Working with the GPU
+to set PyTorch up to wot=rk on a GPU, you will need CUDA, here are the relevant links.
+CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
+cudnn: https://developer.nvidia.com/cudnn (download, extract and move the bin, lib, include directories to your CUDA 
+toolkit directory )
+
+* Google colab works via a Jupyter notebook in your Google drive, the notebook is configured to pull the SOEN490AI 
+repository into the drive where the dataset will need to be manually added and then the code can be executed
 
 
 ## Model(s):

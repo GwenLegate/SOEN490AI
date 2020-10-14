@@ -1,6 +1,3 @@
-# This script contains the training parameters and algorithms used to train the ASL alphabet model
-
-# Import statements
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,40 +9,42 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import utilities.data_processing as data
 import constants as c
 
-# flags
+'''Flags to control execution'''
 CHECK_BALANCE = False
-TRAIN = True
+TRAIN = False
 
-# check for GPU, if no GPU, use CPU
+''' Check for GPU, if no GPU, use CPU'''
 if torch.cuda.is_available():
-  dev = "cuda:0"
+    device = torch.device("cuda:0")  # you can continue going on here, like cuda:1 cuda:2....etc.
+    print("Running on the GPU")
 else:
-  dev = "cpu"
-device = torch.device(dev)
+    device = torch.device("cpu")
+    print("Running on the CPU")
 
-# hyper parameters
+''' Define hyper parameters'''
 KERNEL = 5
 LEARNING_RATE = 0.001
-EPOCHS = 5
+EPOCHS = 10
 BATCH_SIZE = 64
 
-# input parameters
+'''input parameters'''
 train_img_xdim, train_img_ydim = 32, 32
 
-# Import data from source file
+''' Import data from source file and convert to PyTorch tensors'''
 alphabet_train_data = data.get_data(c.FILE_TRAIN_ALPHABET)
 alphabet_trainX, alphabet_trainy = alphabet_train_data[:, 1:], alphabet_train_data[:, 0]
-# convert to pytorch tensors
 alphabet_inputs = torch.from_numpy(alphabet_trainX).view(-1, 32, 32)
-alphabet_inputs = alphabet_inputs/255.0 # normalize pixel values
+'''normalize pixel values'''
+alphabet_inputs = alphabet_inputs/255.0
 alphabet_labels = torch.from_numpy(alphabet_trainy, dtype=torch.float32)
 
-# Check balance of dataset
+'''Check balance of dataset'''
 sign_totals = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0, 14:0, 15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 21:0, 22:0, 23:0, 24:0, 25:0}
 
 if(CHECK_BALANCE):
    data.check_balance(sign_totals, alphabet_trainy)
 
+'''Net class defines the architecture of the neural net, how data is fed through and error is back propagated'''
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
@@ -77,16 +76,24 @@ class Net(nn.Module):
         x = self.fc2(x)  # bc this is our output layer. No activation here.
         return F.softmax(x, dim=1)
 
-alphabet_cnn = Net()
+alphabet_cnn = Net().to(device)
 optimizer = optim.Adam(alphabet_cnn.parameters(), lr=LEARNING_RATE)
 loss_fn = nn.MSELoss()
 
-for epoch in range(EPOCHS):
-    for i in range(0, len(alphabet_inputs), BATCH_SIZE):
-        batch_x = alphabet_inputs[i:i + BATCH_SIZE].view(-1, 1, train_img_xdim, train_img_ydim)
-        batch_y = alphabet_labels[i:i + BATCH_SIZE]
-        alphabet_cnn.zero_grad()
-        outputs = alphabet_cnn(batch_x)
-        loss = loss_fn(outputs, batch_y)
-        loss.backward()
-        optimizer.step()
+''' training method'''
+def train(alphabet_cnn):
+    for epoch in range(EPOCHS):
+        for i in range(0, len(alphabet_inputs), BATCH_SIZE):
+            batch_x = alphabet_inputs[i:i + BATCH_SIZE].view(-1, 1, train_img_xdim, train_img_ydim)
+            batch_y = alphabet_labels[i:i + BATCH_SIZE]
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+            alphabet_cnn.zero_grad()
+            outputs = alphabet_cnn(batch_x)
+            loss = loss_fn(outputs, batch_y)
+            loss.backward()
+            optimizer.step()
+            print("loss "+loss)
+''' set TRAIN=True to train model, learned weights are serialized and saved to the 'trained_models' directory'''
+if(TRAIN):
+    train(alphabet_cnn)
+    torch.save(alphabet_cnn.state_dict(), c.MODEL_SAVE_PATH+"/alphabet_model.pt")
