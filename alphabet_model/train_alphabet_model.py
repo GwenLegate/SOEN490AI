@@ -25,7 +25,7 @@ else:
 ''' Define hyper parameters'''
 KERNEL = 5
 LEARNING_RATE = 0.001
-EPOCHS = 12
+EPOCHS = 100
 BATCH_SIZE = 72
 
 '''input parameters'''
