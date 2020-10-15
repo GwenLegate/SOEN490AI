@@ -6,3 +6,9 @@
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+amer_sign2.png
+amer_sign3.png
+american_sign_language.png
+sign_mnist_test.csv
+sign_mnist_train.csv
+learning_pytorch/
