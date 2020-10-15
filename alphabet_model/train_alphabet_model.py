@@ -11,7 +11,7 @@ import constants as c
 
 '''Flags to control execution'''
 CHECK_BALANCE = False
-TRAIN = False
+TRAIN = True
 
 ''' Check for GPU, if no GPU, use CPU'''
 if torch.cuda.is_available():
