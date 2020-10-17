@@ -13,7 +13,7 @@ import constants as c
 
 '''Flags to control execution'''
 CHECK_BALANCE = False
-TRAIN = False
+TRAIN = True
 
 ''' Check for GPU, if no GPU, use CPU'''
 if torch.cuda.is_available():
@@ -42,11 +42,15 @@ alphabet_trainX, alphabet_trainy = alphabet_train_data[:, 1:], alphabet_train_da
 '''reformat y to one-hot-vector-format for comparison with outputs'''
 reformat_trainy = np.zeros((len(alphabet_trainy), 26))
 reformat_testy = np.zeros((len(alphabet_testy), 26))
-i = 0
-while i < len(alphabet_trainy):
-    reformat_trainy[i][alphabet_trainy[i]]=1
-    reformat_testy[i][alphabet_testy[i]] = 1
-    i += 1
+j = 0
+while j < len(alphabet_trainy):
+    reformat_trainy[j][alphabet_trainy[j]] = 1
+    j += 1
+
+j = 0
+while j < len(alphabet_testy):
+    reformat_testy[j][alphabet_testy[j]] = 1
+    j += 1
 
 alphabet_trainy = reformat_trainy
 alphabet_testy = reformat_testy
@@ -105,7 +109,7 @@ def feed_model(X, y, train=False):
         if a == b:
             num_correct += 1
     accuracy = num_correct/len(y)
-    loss = loss_fn(outputs, y)
+    loss = loss_fn(outputs, y.float())
     if train:
         loss.backward()
         optimizer.step()
@@ -120,14 +124,14 @@ size: the amount of test instances to use.
 returns the accuracy and loss for the test data being fed through the model'''
 def test(size):
     random_start = np.random.randint(len(alphabet_test_features) - size)
-    X, y = alphabet_test_features[random_start:random_start + size], alphabet_test_labels[random_start + size]
+    X, y = alphabet_test_features[random_start:random_start + size], alphabet_test_labels[random_start:random_start + size]
     with torch.no_grad():
         test_accuracy, test_loss = feed_model(X.view(-1, 1, img_xdim, img_ydim).to(device), y.to(device))
     return test_accuracy, test_loss
 
 ''' training method, includes a log file to track training progress'''
 def train():
-    NUM_BATCH = 50 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
+    NUM_BATCH = 1 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
     with open("alphabet_model.log", "a") as f:
         for epoch in range(EPOCHS):
             for i in range(0, len(alphabet_train_features), BATCH_SIZE):
@@ -139,9 +143,7 @@ def train():
                 if i % NUM_BATCH == 0:
                     test_accuracy, test_loss = test(size=100)
                     f.write(
-                        f"{MODEL_NAME}, {round(time.time(), 3)}, {round(float(test_accuracy), 5)}, {round(float(test_loss), 5)}, {round(float(train_accuracy), 5)}, {round(float(train_accuracy), 5)}\n")
-
-
+                        f"{MODEL_NAME}, {round(time.time(), 3)}, {int(epoch)}, {round(float(test_accuracy), 5)}, {round(float(test_loss), 5)}, {round(float(train_accuracy), 5)}, {round(float(train_loss), 5)}\n")
 
 ''' set TRAIN=True to train model, learned weights are serialized and saved to the 'trained_models' directory'''
 if(TRAIN):
