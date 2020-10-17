@@ -11,4 +11,4 @@ amer_sign3.png
 american_sign_language.png
 sign_mnist_test.csv
 sign_mnist_train.csv
-learning_pytorch/
+/learning_pytorch/
