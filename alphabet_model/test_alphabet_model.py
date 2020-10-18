@@ -21,6 +21,9 @@ alphabet_test_data = data.get_data(c.FILE_TEST_ALPHABET)
 alphabet_testX, alphabet_testy = alphabet_test_data[:, 1:], alphabet_test_data[:, 0]
 
 ''' load the trained model'''
-alphabet_cnn = alphabet_model.Net()
-alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH+"/alphabet_model.pt", map_location=device))
-alphabet_cnn.eval() # evaluation mode
+#alphabet_cnn = alphabet_model.Net()
+#alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH+"/alphabet_model.pt", map_location=device))
+#alphabet_cnn.eval() # evaluation mode
+
+'''generate plot of accuracy and loss over time'''
+data.plot_accuracy_and_loss(os.getcwd()+"/alphabet_model.log")

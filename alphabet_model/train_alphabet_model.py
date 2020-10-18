@@ -131,8 +131,9 @@ def test(size):
 
 ''' training method, includes a log file to track training progress'''
 def train():
-    NUM_BATCH = 1 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
+    NUM_BATCH = 50 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
     with open("alphabet_model.log", "a") as f:
+        init_time = time.time()
         for epoch in range(EPOCHS):
             for i in range(0, len(alphabet_train_features), BATCH_SIZE):
                 batch_x = alphabet_train_features[i:i + BATCH_SIZE].view(-1, 1, img_xdim, img_ydim)
@@ -143,7 +144,7 @@ def train():
                 if i % NUM_BATCH == 0:
                     test_accuracy, test_loss = test(size=100)
                     f.write(
-                        f"{MODEL_NAME}, {round(time.time(), 3)}, {int(epoch)}, {round(float(test_accuracy), 5)}, {round(float(test_loss), 5)}, {round(float(train_accuracy), 5)}, {round(float(train_loss), 5)}\n")
+                        f"{MODEL_NAME}, {round(time.time()-init_time, 4)}, {int(epoch)}, {round(float(test_accuracy), 5)}, {round(float(test_loss), 5)}, {round(float(train_accuracy), 5)}, {round(float(train_loss), 5)}\n")
 
 ''' set TRAIN=True to train model, learned weights are serialized and saved to the 'trained_models' directory'''
 if(TRAIN):
