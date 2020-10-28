@@ -10,8 +10,10 @@ import numpy as np
 def get_data(path, type = 'csv'):
     if type == 'csv':
         return pd.read_csv(path).to_numpy()
+    if type == 'npy':
+        return np.load(path)
     else:
-        print('type must be \'csv\'')
+        print('type must be \'csv\' or \'npy\'')
 
 ''' checks the dataset is balanced, prints out the input dictionary updated with the total amount of each class
 in the training set.
