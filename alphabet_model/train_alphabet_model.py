@@ -13,7 +13,7 @@ import constants as c
 
 '''Flags to control execution'''
 CHECK_BALANCE = False
-TRAIN = True
+TRAIN = False
 
 ''' Check for GPU, if no GPU, use CPU'''
 if torch.cuda.is_available():
@@ -75,10 +75,11 @@ if(CHECK_BALANCE):
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 32, KERNEL)
-        self.conv2 = nn.Conv2d(32, 32, KERNEL)
-        self.conv3 = nn.Conv2d(32, 64, KERNEL)
+        self.conv1 = nn.Conv2d(1, 32, 6)
+        self.conv2 = nn.Conv2d(32, 32, 5)
+        self.conv3 = nn.Conv2d(32, 64, 3)
 
+        self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
         self.fc2 = nn.Linear(512, 26)
 
@@ -89,6 +90,9 @@ class Net(nn.Module):
         x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.dropout(x, p=0.5, training=self.training)
+
+        x = F.relu(self.avgpool(x))
+
         x = x.view(-1, 3*3*64 )  # .view is reshape, this flattens X for the linear layers
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
