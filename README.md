@@ -49,7 +49,10 @@ pre-labeled so this model will be trained using supervised learning.  There are 
 tune the fit of the model prior to attempting to evaluate it's performance on real world images.
 Because the training images are 28x28 pixels, a convolutional neural network will be used to so the size of the input 
 images passed from the In Plain Sight App will not be constrained to match this image size\[1\].  Image pre-processing 
-should be applied to images passed from In Plain Sight since this will improve the accuracy of the model
+should be applied to images passed from In Plain Sight since this will improve the accuracy of the model.
+
+Given some weaknesses in the model predictions, another dataset: https://www.kaggle.com/grassknoted/asl-alphabet , has 
+been incorporated into the training.  This dataset is much larger, containing 87 000 images with pixel size 200x200 
 
 ** References
 
