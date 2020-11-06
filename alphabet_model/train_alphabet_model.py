@@ -60,9 +60,11 @@ if PROCESS_MNIST:
 alpha_X = np.empty((0, 200, 200))
 for root, dirs, files in os.walk(c.TRAIN_ALPHABET_IMGS_BASEDIR):
     for name in files:
-        alpha_X = np.append(alpha_X, data.preprocess_image(os.path.join(root, name)))
+        px = data.preprocess_image(os.path.join(root, name)).reshape(-1, 200, 200)
+        alpha_X = np.append(alpha_X, px, axis=0)
 
 #all letters have 3000 instances except J and Z which have 0.  Create y and put into one hot vector format
+
 alpha_y = np.zeros(3000, dtype=int)
 for i in range(1, 25):
     if i == 9:
