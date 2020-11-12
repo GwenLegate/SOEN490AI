@@ -2,3 +2,6 @@ pickleshare
 matplotlib
 pandas
 time
+sklearn
+sys
+os
