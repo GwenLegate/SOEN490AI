@@ -11,4 +11,10 @@ amer_sign3.png
 american_sign_language.png
 sign_mnist_test.csv
 sign_mnist_train.csv
+/asl_alphabet_test/
+/asl_alphabet_train/
 /learning_pytorch/
+test_inputs.npy
+test_labels.npy
+test_predictions.npy
+training_data.npy

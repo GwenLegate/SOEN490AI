@@ -1,8 +1,9 @@
 import torch
-from sklearn.model_selection import train_test_split
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import sklearn
+from sklearn.model_selection import train_test_split
 import numpy as np
 import time
 import sys
@@ -14,9 +15,10 @@ import constants as c
 
 # Flags to control execution
 CHECK_BALANCE = False
-TRAIN = True
+TRAIN = False
 CONTINUE_TRAINING = True
 PROCESS_MNIST = False
+REPROCESS_TRAINING_IMAGES = False
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -56,34 +58,36 @@ if PROCESS_MNIST:
     alphabet_train_labels = torch.from_numpy(alphabet_trainy)
     alphabet_test_labels = torch.from_numpy(alphabet_testy)
 
-# preprocess images and add them to the input feature array
-alpha_X = np.empty((0, 200, 200))
-for root, dirs, files in os.walk(c.TRAIN_ALPHABET_IMGS_BASEDIR):
-    for name in files:
-        px = data.preprocess_image(os.path.join(root, name)).reshape(-1, 200, 200)
-        alpha_X = np.append(alpha_X, px, axis=0)
+if REPROCESS_TRAINING_IMAGES:
+    # preprocess images and add them to the input feature array
+    alpha_X = data.get_data(c.TRAIN_ALPHABET_IMGS_BASEDIR)
+    for root, dirs, files in os.walk(c.TRAIN_ALPHABET_IMGS_BASEDIR):
+        for name in files:
+            px = data.preprocess_image(os.path.join(root, name)).reshape(-1, 200, 200)
+            alpha_X = np.append(alpha_X, px, axis=0)
+        np.save('training_data.npy', alpha_X)
 
-#all letters have 3000 instances except J and Z which have 0.  Create y and put into one hot vector format
+    print(alpha_X.shape)
 
-alpha_y = np.zeros(3000, dtype=int)
-for i in range(1, 25):
-    if i == 9:
-       break
-    else:
-        arr = np.full(3000, i)
-        alpha_y = np.concatenate((alpha_y, arr))
+    #all letters have 3000 instances except J and Z which have 0.  Create y and put into one hot vector format
+    alpha_y = np.zeros(3000, dtype=int)
+    for i in range(1, 25):
+        if not i == 9:
+            arr = np.full(3000, i)
+            alpha_y = np.concatenate((alpha_y, arr))
+    alpha_y = data.one_hot_vector(alpha_y, num_classes=26)
 
-alpha_y = data.one_hot_vector(alpha_y, num_classes=26)
-
-# shuffle and split training and testing data and put them into torch tensors
-alpha_X, alpha_X_test, alpha_y, alpha_y_test = train_test_split(alpha_X, alpha_y, test_size=0.15)
-alpha_X = torch.from_numpy(alpha_X).type('torch.FloatTensor')
-alpha_y = torch.from_numpy(alpha_y)
-alpha_X_test = torch.from_numpy(alpha_X_test).type('torch.FloatTensor')
-alpha_y_test = torch.from_numpy(alpha_y_test)
+    # standardize, shuffle and split training and testing data and put them into torch tensors
+    alpha_X = sklearn.preprocessing.StandardScalar().fit_transform(alpha_X) # standardize data around mean = 0
+    alpha_X, alpha_X_test, alpha_y, alpha_y_test = train_test_split(alpha_X, alpha_y, test_size=0.15)
+    alpha_X = torch.from_numpy(alpha_X).type('torch.FloatTensor')
+    alpha_y = torch.from_numpy(alpha_y)
+    alpha_X_test = torch.from_numpy(alpha_X_test).type('torch.FloatTensor')
+    alpha_y_test = torch.from_numpy(alpha_y_test)
 
 # Check balance of dataset
-sign_totals = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0, 14:0, 15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 21:0, 22:0, 23:0, 24:0, 25:0}
+sign_totals = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0, 14:0, 15:0, 16:0, 17:0, 18:0,
+               19:0, 20:0, 21:0, 22:0, 23:0, 24:0, 25:0}
 
 if CHECK_BALANCE:
    data.check_balance(sign_totals, alphabet_trainy)
@@ -142,11 +146,11 @@ if CONTINUE_TRAINING:
     alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/alphabet_model.pt", map_location=device))
 
 optimizer = optim.Adam(alphabet_cnn.parameters(), lr=LEARNING_RATE)
-loss_fn = nn.MSELoss()
+loss_fn = nn.CrossEntropyLoss()
 
-# tests accuracy and loss on a random slice of the test data.
+'''tests accuracy and loss on a random slice of the test data.
 # size: the amount of test instances to use.
-# returns the accuracy and loss for the test data being fed through the model
+# returns the accuracy and loss for the test data being fed through the model'''
 def test(size):
     random_start = np.random.randint(len(alpha_X_test) - size)
     X, y = alpha_X_test[random_start:random_start + size], alpha_y_test[random_start:random_start + size]
