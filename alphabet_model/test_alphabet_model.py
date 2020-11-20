@@ -120,13 +120,13 @@ alpha_predict_y = data.get_data("test_predictions.npy")
 y1 = data.numeric_class(alpha_test_y)
 y2 = data.numeric_class(alpha_predict_y)
 
-print(eval.confusion(alpha_predict_y, alpha_test_y, classes=26))
-print(sklearn.metrics.accuracy_score(y1, y2))
-print(sklearn.metrics.precision_score(y1, y2))
-print(sklearn.metrics.recall_score(y1, y2))
+#print(eval.confusion(alpha_predict_y, alpha_test_y, classes=26))
+#print(sklearn.metrics.accuracy_score(y1, y2))
+#print(sklearn.metrics.precision_score(y1, y2))
+#print(sklearn.metrics.recall_score(y1, y2))
 
 ''' predict one real image'''
-test_img = data.preprocess_image(c.Gwen_W)
+test_img = data.preprocess_image(c.GWEN_W)
 print(predict_az(test_img))
 
 

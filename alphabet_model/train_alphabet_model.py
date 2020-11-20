@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import sklearn
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 import numpy as np
 import time
 import sys
@@ -16,9 +17,9 @@ import constants as c
 # Flags to control execution
 CHECK_BALANCE = False
 TRAIN = False
-CONTINUE_TRAINING = True
+CONTINUE_TRAINING = False
 PROCESS_MNIST = False
-REPROCESS_TRAINING_IMAGES = False
+REPROCESS_TRAINING_IMAGES = True
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -58,14 +59,18 @@ if PROCESS_MNIST:
     alphabet_train_labels = torch.from_numpy(alphabet_trainy)
     alphabet_test_labels = torch.from_numpy(alphabet_testy)
 
+alpha_X = data.get_training_arr('training_data.npy')
+print(alpha_X.shape)
+
 if REPROCESS_TRAINING_IMAGES:
     # preprocess images and add them to the input feature array
-    alpha_X = data.get_data(c.TRAIN_ALPHABET_IMGS_BASEDIR)
-    for root, dirs, files in os.walk(c.TRAIN_ALPHABET_IMGS_BASEDIR):
+    for root, dirs, files in os.walk(c.TRAIN_ALPHABET_IMGS_BASEDIR+"K"):
         for name in files:
+            print(name)
             px = data.preprocess_image(os.path.join(root, name)).reshape(-1, 200, 200)
             alpha_X = np.append(alpha_X, px, axis=0)
-        np.save('training_data.npy', alpha_X)
+        alpha_X = StandardScaler().fit_transform(alpha_X.reshape(-1, 200 * 200))  # standardize data around mean = 0
+        np.save('training_data.npy', alpha_X.reshape(-1, 200, 200))
 
     print(alpha_X.shape)
 
@@ -78,7 +83,6 @@ if REPROCESS_TRAINING_IMAGES:
     alpha_y = data.one_hot_vector(alpha_y, num_classes=26)
 
     # standardize, shuffle and split training and testing data and put them into torch tensors
-    alpha_X = sklearn.preprocessing.StandardScalar().fit_transform(alpha_X) # standardize data around mean = 0
     alpha_X, alpha_X_test, alpha_y, alpha_y_test = train_test_split(alpha_X, alpha_y, test_size=0.15)
     alpha_X = torch.from_numpy(alpha_X).type('torch.FloatTensor')
     alpha_y = torch.from_numpy(alpha_y)
