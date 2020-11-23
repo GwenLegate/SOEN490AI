@@ -52,7 +52,7 @@ def one_hot_vector(y, num_classes):
 
 ''' turns one-hot-vector into numberic label'''
 def numeric_class(y):
-    arr = np.empty([])
+    arr = np.empty(0)
     for i in y:
         arr = np.append(arr, np.argmax(i))
     return arr
