@@ -52,7 +52,16 @@ def one_hot_vector(y, num_classes):
 
 ''' turns one-hot-vector into numberic label'''
 def numeric_class(y):
-    arr = np.empty([])
+    arr = np.empty(0)
     for i in y:
         arr = np.append(arr, np.argmax(i))
     return arr
+
+''' check if file exists and returns loaded numpy array if it does, otherwise it returns an empty array'''
+def get_training_arr(file):
+    try:
+        np.load(file, allow_pickle=True)
+    except FileNotFoundError:
+        return  np.empty((0, 200, 200))
+    else:
+        return np.load(file, allow_pickle=True)
