@@ -62,6 +62,9 @@ def get_training_arr(file):
     try:
         np.load(file, allow_pickle=True)
     except FileNotFoundError:
-        return  np.empty((0, 200, 200))
+        if "alpha" in file:
+            return np.empty((0, 200, 200))
+        if "digit" in file:
+            return np.empty((0, 100, 100))
     else:
         return np.load(file, allow_pickle=True)

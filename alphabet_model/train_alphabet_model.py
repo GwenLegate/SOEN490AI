@@ -27,7 +27,7 @@ else:
 # Define hyper parameters
 KERNEL = 5
 LEARNING_RATE = 0.001
-EPOCHS = 500
+EPOCHS = 25
 BATCH_SIZE = 100
 
 # input parameters
@@ -41,10 +41,16 @@ alpha_X = data.get_training_arr('training_features.npy')
 print(alpha_X.shape)
 alpha_y = data.get_training_arr('training_labels.npy')
 print(alpha_y.shape)
+alpha_X_test = data.get_training_arr('test_inputs.npy')
+print(alpha_X_test.shape)
+alpha_y_test = data.get_training_arr('test_labels.npy')
+print(alpha_y_test.shape)
 
-alpha_X, alpha_X_test, alpha_y, alpha_y_test = train_test_split(alpha_X, alpha_y, test_size=0.15, random_state=0)
+alpha_X, _, alpha_y, _ = train_test_split(alpha_X, alpha_y, test_size=1, random_state=0)
 alpha_X = torch.from_numpy(alpha_X).type('torch.FloatTensor')
 alpha_y = torch.from_numpy(alpha_y)
+
+
 alpha_X_test = torch.from_numpy(alpha_X_test).type('torch.FloatTensor')
 alpha_y_test = torch.from_numpy(alpha_y_test)
 
@@ -101,6 +107,7 @@ def feed_model(X, y, train=False):
 alphabet_cnn = Net().to(device)
 # load current model if you want to continue to build off it
 if CONTINUE_TRAINING:
+    print("previous model loaded")
     alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/alphabet_model.pt", map_location=device))
 
 optimizer = optim.Adam(alphabet_cnn.parameters(), lr=LEARNING_RATE)
@@ -119,11 +126,11 @@ def test(size):
 # training method, includes a log file to track training progress
 def train():
     NUM_BATCH = 100 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
-    with open("alphabet_model.log", "a") as f:
+    with open("alphabet_model.log", "a+") as f:
         init_time = time.time()
         for epoch in range(EPOCHS):
             print(epoch)
-            if epoch == 20 or epoch == 40 or epoch == 60:
+            if epoch == 10 or epoch == 20:
                 # save progress periodically in case we run out of time on the gpu
                 torch.save(alphabet_cnn.state_dict(), c.MODEL_SAVE_PATH + "/alphabet_model.pt")
             for i in range(0, len(alpha_X), BATCH_SIZE):
