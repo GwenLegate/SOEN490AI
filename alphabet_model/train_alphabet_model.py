@@ -11,6 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 import utilities.data_processing as data
 import constants as c
+from alphabet_model.alphabet_preprocessing import  shuffle_test_set
 
 # Flags to control execution
 TRAIN = True
@@ -26,7 +27,7 @@ else:
 
 # Define hyper parameters
 KERNEL = 5
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.093994
 EPOCHS = 25
 BATCH_SIZE = 100
 
@@ -41,9 +42,11 @@ alpha_X = data.get_training_arr('training_features.npy')
 print(alpha_X.shape)
 alpha_y = data.get_training_arr('training_labels.npy')
 print(alpha_y.shape)
-alpha_X_test = data.get_training_arr('test_inputs.npy')
+
+alpha_X_test = data.get_training_arr('alpha_test_inputs.npy')
+alpha_y_test = data.get_training_arr('alphabet_test_labels.npy')
+alpha_X_test, alpha_y_test = shuffle_test_set(alpha_X_test, alpha_y_test)
 print(alpha_X_test.shape)
-alpha_y_test = data.get_training_arr('test_labels.npy')
 print(alpha_y_test.shape)
 
 alpha_X, _, alpha_y, _ = train_test_split(alpha_X, alpha_y, test_size=1, random_state=0)
@@ -81,6 +84,11 @@ class Net(nn.Module):
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
+
+''' decays learning rate wrt. accuracy '''
+def decay_learning(lr, epoch, accuracy):
+    return lr - ((1/(epoch+26)) * ((1 - accuracy)**100))
+
 
 # method to pass data through the model, set train to True if it is a training pass.
 # Returns accuracy and loss of X, y passed
@@ -125,11 +133,13 @@ def test(size):
 
 # training method, includes a log file to track training progress
 def train():
+    global LEARNING_RATE
     NUM_BATCH = 100 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
     with open("alphabet_model.log", "a+") as f:
         init_time = time.time()
         for epoch in range(EPOCHS):
             print(epoch)
+
             if epoch == 10 or epoch == 20:
                 # save progress periodically in case we run out of time on the gpu
                 torch.save(alphabet_cnn.state_dict(), c.MODEL_SAVE_PATH + "/alphabet_model.pt")
@@ -138,11 +148,14 @@ def train():
                 batch_y = alpha_y[i:i + BATCH_SIZE]
                 batch_x, batch_y = batch_x.to(device), batch_y.to(device)
                 train_accuracy, train_loss = feed_model(batch_x, batch_y, train=True) #train model with batch data
-
                 if i % NUM_BATCH == 0:
+
                     test_accuracy, test_loss = test(size=100)
                     f.write(
                         f"{MODEL_NAME}, {round(time.time()-init_time, 4)}, {int(epoch)}, {round(float(test_accuracy), 5)}, {round(float(test_loss), 5)}, {round(float(train_accuracy), 5)}, {round(float(train_loss), 5)}\n")
+            # increment learning rate down after each epoch
+            LEARNING_RATE = decay_learning(LEARNING_RATE, epoch, train_accuracy)
+            print("updated learning rate is ", LEARNING_RATE)
 
 # set TRAIN=True to train model, learned weights are serialized and saved to the 'trained_models' directory
 if(TRAIN):
