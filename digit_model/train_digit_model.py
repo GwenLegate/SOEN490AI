@@ -25,7 +25,7 @@ digit_train_y = data.one_hot_vector(digit_train_y, 26)
 digit_test_y = data.one_hot_vector(digit_test_y, 26)'''
 
 # Flags to control execution
-TRAIN = True
+TRAIN = False
 CONTINUE_TRAINING = False
 
 # Check for GPU, if no GPU, use CPU
@@ -37,7 +37,7 @@ else:
     print("Running on the CPU")
 
 # Define hyper parameters
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0005
 EPOCHS = 100
 BATCH_SIZE = 50
 
