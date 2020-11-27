@@ -34,9 +34,13 @@ def preprocess_training_images(letters, fname):
                 print(name)
                 px = data.preprocess_image(os.path.join(root, name)).reshape(-1, 200, 200)
                 alpha_X = np.append(alpha_X, px, axis=0)
-            alpha_X = StandardScaler().fit_transform(alpha_X.reshape(-1, 200 * 200))  # standardize data around mean = 0
             np.save(fname, alpha_X.reshape(-1, 200, 200))
         print(alpha_X.shape)
+
+''' scale dataset and save'''
+def scale(alpha, fname):
+    alpha = StandardScaler().fit_transform(alpha.reshape(-1, 200 * 200))  # standardize data around mean = 0
+    np.save(fname, alpha)
 
 ''' preprocesses images from the training set'''
 def preprocess_testing_images():
@@ -85,7 +89,7 @@ def create_alphabet_test_labels():
     alpha_test_y = data.one_hot_vector(alpha_test_y, num_classes=26)
     np.save('alphabet_test_labels.npy', alpha_test_y)
 
-''' shuffles testing set before use'''
+''' shuffles test set before use'''
 def shuffle_test_set(test_X, test_y):
     test_X = test_X.reshape(720, -1)
     test_y = data.numeric_class(test_y).reshape(-1, 1)
@@ -94,3 +98,5 @@ def shuffle_test_set(test_X, test_y):
     test_X, test_y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
     test_y = data.one_hot_vector(test_y.astype(int), num_classes=26)
     return test_X, test_y
+
+preprocess_training_images(["G", "H", "I"], "ghi.npy")

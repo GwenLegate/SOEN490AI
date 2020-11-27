@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from sklearn.model_selection import train_test_split
+from torchsummary import summary
 import numpy as np
 import time
 import sys
@@ -11,11 +11,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 import utilities.data_processing as data
 import constants as c
-from alphabet_model.alphabet_preprocessing import  shuffle_test_set
+from alphabet_model.alphabet_preprocessing import shuffle_test_set
 
 # Flags to control execution
-TRAIN = True
-CONTINUE_TRAINING = True
+TRAIN = False
+CONTINUE_TRAINING = False
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -26,10 +26,9 @@ else:
     print("Running on the CPU")
 
 # Define hyper parameters
-KERNEL = 5
-LEARNING_RATE = 0.093994
-EPOCHS = 25
-BATCH_SIZE = 100
+LEARNING_RATE = 0.001
+EPOCHS = 30
+BATCH_SIZE = 50
 
 # input parameters
 MODEL_NAME = f"alpha_model-{int(time.time())}" # make logfile (time.time() gives a time stamp so you can have a history)
@@ -45,11 +44,9 @@ print(alpha_y.shape)
 
 alpha_X_test = data.get_training_arr('alpha_test_inputs.npy')
 alpha_y_test = data.get_training_arr('alphabet_test_labels.npy')
-alpha_X_test, alpha_y_test = shuffle_test_set(alpha_X_test, alpha_y_test)
 print(alpha_X_test.shape)
 print(alpha_y_test.shape)
 
-alpha_X, _, alpha_y, _ = train_test_split(alpha_X, alpha_y, test_size=1, random_state=0)
 alpha_X = torch.from_numpy(alpha_X).type('torch.FloatTensor')
 alpha_y = torch.from_numpy(alpha_y)
 
@@ -61,9 +58,10 @@ alpha_y_test = torch.from_numpy(alpha_y_test)
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 32, 6)
-        self.conv2 = nn.Conv2d(32, 32, 5)
-        self.conv3 = nn.Conv2d(32, 64, 3)
+        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(8, 16, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(16, 64, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
@@ -76,6 +74,9 @@ class Net(nn.Module):
         x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.dropout(x, p=0.5, training=self.training)
+        x = F.relu(F.max_pool2d(self.conv4(x), 2))
+        # drops out couple of random neurons in the neural network to avoid overfitting
+        x = F.dropout(x, p=0.5, training=self.training)
 
         x = F.relu(self.avgpool(x))
 
@@ -84,11 +85,6 @@ class Net(nn.Module):
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
-
-''' decays learning rate wrt. accuracy '''
-def decay_learning(lr, epoch, accuracy):
-    return lr - ((1/(epoch+26)) * ((1 - accuracy)**100))
-
 
 # method to pass data through the model, set train to True if it is a training pass.
 # Returns accuracy and loss of X, y passed
@@ -117,6 +113,7 @@ alphabet_cnn = Net().to(device)
 if CONTINUE_TRAINING:
     print("previous model loaded")
     alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/alphabet_model.pt", map_location=device))
+    #summary(alphabet_cnn, (10, 200, 200))
 
 optimizer = optim.Adam(alphabet_cnn.parameters(), lr=LEARNING_RATE)
 loss_fn = nn.CrossEntropyLoss()
@@ -153,9 +150,6 @@ def train():
                     test_accuracy, test_loss = test(size=100)
                     f.write(
                         f"{MODEL_NAME}, {round(time.time()-init_time, 4)}, {int(epoch)}, {round(float(test_accuracy), 5)}, {round(float(test_loss), 5)}, {round(float(train_accuracy), 5)}, {round(float(train_loss), 5)}\n")
-            # increment learning rate down after each epoch
-            LEARNING_RATE = decay_learning(LEARNING_RATE, epoch, train_accuracy)
-            print("updated learning rate is ", LEARNING_RATE)
 
 # set TRAIN=True to train model, learned weights are serialized and saved to the 'trained_models' directory
 if(TRAIN):
