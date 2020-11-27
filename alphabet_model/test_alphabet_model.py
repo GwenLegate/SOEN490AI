@@ -9,6 +9,7 @@ import utilities.data_processing as data
 import utilities.evaluation_metrics as eval
 import constants as c
 from alphabet_model.train_alphabet_model import Net
+from alphabet_model.alphabet_preprocessing import shuffle_test_set
 
 ''' check for GPU, if no GPU, use CPU '''
 if torch.cuda.is_available():
@@ -18,11 +19,7 @@ else:
     device = torch.device("cpu")
     print("Running on the CPU")
 
-'''global variables and flags to control execution'''
-PLOT_ACCURACY_LOSS = False
-REPROCESS_TEST_IMAGES = False
-RECALCULATE_TEST_PREDICTIONS = False
-
+''' predict mnist test set'''
 def predict_test_set_MNIST():
     '''Import data from source file and separate into features and labels'''
     alphabet_test_data = data.get_data(c.FILE_TEST_ALPHABET, type='csv')
@@ -40,40 +37,11 @@ def predict_test_set_MNIST():
     alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/alphabet_model.pt", map_location=device))
     return alphabet_cnn(test_features.view(-1, 1, 28, 28)).detach().numpy()
 
-''' image process on generic training set '''
-if REPROCESS_TEST_IMAGES:
-    # preprocess images and add them to the input feature array
-    alpha_test_X = data.get_data('test_inputs.npy')
-    num = 0
-    for root, dirs, files in os.walk(c.TEST_ALPHABET_IMGS_BASEDIR):
-        for name in files:
-            px = data.preprocess_image(os.path.join(root, name))
-            r, c, = px.shape
+'''global variables and flags to control execution'''
+PLOT_ACCURACY_LOSS = False
+REPROCESS_TEST_IMAGES = False
+RECALCULATE_TEST_PREDICTIONS = False
 
-            if r == 200 and c == 200:
-                px = px.reshape(-1, 200, 200)
-                alpha_test_X = np.append(alpha_test_X, px, axis=0)
-            else:
-                # pad image
-                add_r = 200 - r
-                add_c = 200 - c
-                if not add_r == 0:
-                    px.vstack((np.zeros(add_r, c)), px)
-                if not add_c == 0:
-                    px.hstack((np.zeros((200, add_c)), px))
-                px = px.reshape(-1, 200, 200)
-                alpha_test_X = np.append(alpha_test_X, px, axis=0)
-    np.save('test_inputs.npy', alpha_test_X)
-
-    # all letters have 30 instances except for j and z which have 0.  Create y and put into one hot vector format
-    alpha_test_y = np.zeros(30, dtype=int)
-    for i in range(1, 25):
-        if not i == 9:
-            arr = np.full(30, i)
-            alpha_test_y = np.concatenate((alpha_test_y, arr))
-
-    alpha_test_y = data.one_hot_vector(alpha_test_y, num_classes=26)
-    np.save('test_labels.npy', alpha_test_y)
 
 '''testing'''
 alphabet_cnn = Net()
@@ -104,18 +72,13 @@ alpha_test_X = data.get_data('test_inputs.npy')
 alpha_test_y = data.get_data('test_labels.npy')
 
 if RECALCULATE_TEST_PREDICTIONS:
-    alpha_test_X = alpha_test_X.reshape(720, -1)
-    alpha_test_y = data.numeric_class(alpha_test_y).reshape(-1, 1)
-    xy = np.hstack((alpha_test_X, alpha_test_y))
-    np.random.shuffle(xy)
-    alpha_test_X, alpha_test_y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
-    alpha_test_y = data.one_hot_vector(alpha_test_y.astype(int), num_classes=26)
-    np.save('test_labels.npy', alpha_test_y) # save shuffled order so the saved y corresponds to the predicted y
+    alpha_test_X, alpha_test_y = shuffle_test_set(alpha_test_X, alpha_test_y)
+    np.save('shuffled_test_labels.npy', alpha_test_y) # save shuffled order so the saved y corresponds to the predicted y
     alpha_predict_y = predict_az(alpha_test_X, type=2)
-    np.save('test_predictions.npy', alpha_predict_y)
+    np.save('shuffled_test_predictions.npy', alpha_predict_y)
 
 ''' load test predictions'''
-alpha_predict_y = data.get_data("test_predictions.npy")
+alpha_predict_y = data.get_data("shuffled_test_predictions.npy")
 
 y1 = data.numeric_class(alpha_test_y)
 y2 = data.numeric_class(alpha_predict_y)

@@ -38,8 +38,34 @@ def preprocess_training_images(letters, fname):
             np.save(fname, alpha_X.reshape(-1, 200, 200))
         print(alpha_X.shape)
 
+''' preprocesses images from the training set'''
+def preprocess_testing_images():
+    alpha_test_X = np.empty((0, 200, 200))
+    #num = 0
+    for root, dirs, files in os.walk(c.TEST_ALPHABET_IMGS_BASEDIR):
+        for name in files:
+            print(name)
+            px = data.preprocess_image(os.path.join(root, name))
+            row, col, = px.shape
+
+            if row == 200 and col == 200:
+                px = px.reshape(-1, 200, 200)
+                alpha_test_X = np.append(alpha_test_X, px, axis=0)
+            else:
+
+                # pad image
+                add_r = 200 - row
+                add_c = 200 - col
+                if not add_r == 0:
+                    px = np.vstack((np.zeros((add_r, c)), px))
+                if not add_c == 0:
+                    px = np.hstack((np.zeros((200, add_c)), px))
+                px = px.reshape(-1, 200, 200)
+                alpha_test_X = np.append(alpha_test_X, px, axis=0)
+    np.save('alpha_test_inputs.npy', alpha_test_X)
+
 '''creates and saves label array in one hot vector format.  All letters have 3000 instances except J and Z which have 0.'''
-def create_alphabet_labels():
+def create_alphabet_train_labels():
     alpha_y = np.zeros(3000, dtype=int)
     for i in range(1, 25):
         if not i == 9:
@@ -47,3 +73,24 @@ def create_alphabet_labels():
             alpha_y = np.concatenate((alpha_y, arr))
     alpha_y = data.one_hot_vector(alpha_y, num_classes=26)
     np.save('training_labels.npy', alpha_y)
+
+'''creates and saves label array in one hot vector format.  All letters have 30 instances except J and Z which have 0.'''
+def create_alphabet_test_labels():
+    alpha_test_y = np.zeros(30, dtype=int)
+    for i in range(1, 25):
+        if not i == 9:
+            arr = np.full(30, i)
+            alpha_test_y = np.concatenate((alpha_test_y, arr))
+
+    alpha_test_y = data.one_hot_vector(alpha_test_y, num_classes=26)
+    np.save('alphabet_test_labels.npy', alpha_test_y)
+
+''' shuffles testing set before use'''
+def shuffle_test_set(test_X, test_y):
+    test_X = test_X.reshape(720, -1)
+    test_y = data.numeric_class(test_y).reshape(-1, 1)
+    xy = np.hstack((test_X, test_y))
+    np.random.shuffle(xy)
+    test_X, test_y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
+    test_y = data.one_hot_vector(test_y.astype(int), num_classes=26)
+    return test_X, test_y
