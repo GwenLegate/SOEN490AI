@@ -1,6 +1,7 @@
 import sys, os
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+import pickle
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 import utilities.data_processing as data
@@ -42,6 +43,14 @@ def scale(alpha, fname):
     alpha = StandardScaler().fit_transform(alpha.reshape(-1, 200 * 200))  # standardize data around mean = 0
     np.save(fname, alpha)
 
+'''save scalar for future use'''
+def save_scalar(fname):
+    alpha = data.get_training_arr('alphabet_train_features.npy') # unshuffled, unscaled data
+    scalar = StandardScaler().fit(alpha.reshape(-1, 200 * 200)) # fit scaler
+    file = open(fname, 'wb')
+    pickle.dump(scalar, file)
+    file.close()
+
 ''' preprocesses images from the training set'''
 def preprocess_testing_images():
     alpha_test_X = np.empty((0, 200, 200))
@@ -76,7 +85,7 @@ def create_alphabet_train_labels():
             arr = np.full(3000, i)
             alpha_y = np.concatenate((alpha_y, arr))
     alpha_y = data.one_hot_vector(alpha_y, num_classes=26)
-    np.save('training_labels.npy', alpha_y)
+    np.save('alphabet_training_labels.npy', alpha_y)
 
 '''creates and saves label array in one hot vector format.  All letters have 30 instances except J and Z which have 0.'''
 def create_alphabet_test_labels():
@@ -99,4 +108,12 @@ def shuffle_test_set(test_X, test_y):
     test_y = data.one_hot_vector(test_y.astype(int), num_classes=26)
     return test_X, test_y
 
-preprocess_training_images(["G", "H", "I"], "ghi.npy")
+
+def shuffle_train_set(train_X, train_y):
+    train_X = train_X.reshape(72000, -1)
+    train_y = data.numeric_class(train_y).reshape(-1, 1)
+    xy = np.hstack((train_X, train_y))
+    np.random.shuffle(xy)
+    train_X, train_y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
+    train_y = data.one_hot_vector(train_y.astype(int), num_classes=26)
+    return train_X, train_y
