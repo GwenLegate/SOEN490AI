@@ -3,6 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import PIL
+import pickle
+import constants as c
+from sklearn.preprocessing import StandardScaler
 
 
 '''returns a usable format of the input data.  Input (str): path to fil to be loaded, type (str): type of file input'''
@@ -37,7 +40,9 @@ def check_balance(dict, labels):
 0 and 1'''
 def preprocess_image(img_path):
     img = PIL.Image.open(img_path).convert("L")
-    return np.array(img) / 255.0
+    scalar = load_scalar(c.MODEL_SAVE_PATH+'/alphabet_scalar')
+    #return np.array(img) / 255.0
+    return scalar.transform(np.array(img).reshape(-1, 200 * 200))
 
 
 '''reformat y to one-hot-vector-format'''
@@ -68,3 +73,10 @@ def get_training_arr(file):
             return np.empty((0, 200, 200))
     else:
         return np.load(file, allow_pickle=True)
+
+'''load saved scalar'''
+def load_scalar(fname):
+    file = open(fname, 'rb')
+    scalar = pickle.load(file)
+    file.close()
+    return scalar

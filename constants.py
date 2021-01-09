@@ -11,6 +11,10 @@ TRAIN_DIGIT_IMGS_BASEDIR = os.path.dirname(os.path.dirname(os.path.realpath(__fi
                       "/SOEN490AI/datasets/asl_digits/asl_digits_train/"
 MODEL_SAVE_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/trained_models"
+ACTIVATION_LYR_1 = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
+                     "/SOEN490AI/alphabet_model/visualize_activation1.npy"
+ACTIVATION_LYR_2 = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
+                     "/SOEN490AI/alphabet_model/visualize_activation2.npy"
 GWEN_B = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_b.png"
 GWEN_H = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \

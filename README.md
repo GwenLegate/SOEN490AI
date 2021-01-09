@@ -54,6 +54,10 @@ should be applied to images passed from In Plain Sight since this will improve t
 Given some weaknesses in the model predictions, another dataset: https://www.kaggle.com/grassknoted/asl-alphabet , has 
 been incorporated into the training.  This dataset is much larger, containing 87 000 images with pixel size 200x200 
 
+* ASL digit model to recognise digits 0-9
+Dataset being used in training consists of 2180 images that come from a school project by high school students in Turkey
+images obtained from https://github.com/ardamavi/Sign-Language-Digits-Dataset
+
 ** References
 
 \[1\] Sumit Saha, "A Comprehensive Guide to Convolutional Neural Networks — the ELI5 way." Towards Data Science.com. 

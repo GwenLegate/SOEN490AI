@@ -5,3 +5,5 @@ time
 sklearn
 sys
 os
+opencv-python
+opencv-contrib-python
