@@ -16,4 +16,4 @@ def show_activations(file, batch_no, row, col):
         plt.imshow(activations[batch_no, m, :, :], cmap='summer', interpolation='nearest')
     plt.show()
 
-#show_activations(c.ACTIVATION_LYR_1, 23, 6, 6)
+show_activations(c.ACTIVATION_LYR_1, 0, 4, 2)

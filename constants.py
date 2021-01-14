@@ -37,3 +37,5 @@ GWEN_K = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_K.png"
 GWEN5 = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen5.jpg"
+GWEN_L = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
+                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_l-removebg.png"
