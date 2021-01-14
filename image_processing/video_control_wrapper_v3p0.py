@@ -259,13 +259,13 @@ def input_camera_process(frame_skip,width,height,folder_name,bk_enable,stable_en
 # frame_skip = number of frames to remove after a displayed frame
 #-------------------------------------------------------------------------------
 
-select = sys.argv[1]
-input_type = sys.argv[2]
-input_file = sys.argv[3]
-frame_skip = int(sys.argv[4])
-width = int(sys.argv[5])
-height = int(sys.argv[6])
-folder_name = sys.argv[7]
+select = "--generatebk" #sys.argv[1]
+input_type = "--camera" #sys.argv[2]
+input_file = 'WIN_20210113_22_49_37_Pro.mp4' #sys.argv[3]
+frame_skip = 2 #int(sys.argv[4])
+width = 200 #int(sys.argv[5])
+height = 200 #int(sys.argv[6])
+folder_name = "gwen_t" #sys.argv[7]
 
 bk_enable = False
 stable_enable = False

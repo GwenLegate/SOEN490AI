@@ -6,6 +6,7 @@ import PIL
 import pickle
 import constants as c
 from sklearn.preprocessing import StandardScaler
+from image_processing.angels_image_processing_tool import process_image
 
 
 '''returns a usable format of the input data.  Input (str): path to fil to be loaded, type (str): type of file input'''
@@ -35,15 +36,24 @@ def check_balance(dict, labels):
         total += 1
     print(dict)
 
-
-'''given an image path, the function returns a numpy array of a greyscaled image with pixel values normalized between 
+'''given an image path, the function returns a numpy array of the image with gaussian blur technique, greyscaled, 
+centered around the mean pixel value and normalized pixel values between 0-1 
 0 and 1'''
 def preprocess_image(img_path):
-    img = PIL.Image.open(img_path).convert("L")
-    scalar = load_scalar(c.MODEL_SAVE_PATH+'/alphabet_scalar')
-    #return np.array(img) / 255.0
-    return scalar.transform(np.array(img).reshape(-1, 200 * 200))
+    #gaussian blur and sharpen edges then flatten image
+    img = np.array(process_image(img_path))
+    x, y = img.shape
+    img = np.ravel(img)
 
+    # center data around the mean
+    avg = np.average(img)
+    img = img - avg
+
+    # normalize using MinMax scaling
+    max, min = np.amax(img), np.amin(img)
+    img = (img - min) / (max - min)
+
+    return img.reshape(x, y)
 
 '''reformat y to one-hot-vector-format'''
 def one_hot_vector(y, num_classes):
@@ -74,9 +84,5 @@ def get_training_arr(file):
     else:
         return np.load(file, allow_pickle=True)
 
-'''load saved scalar'''
-def load_scalar(fname):
-    file = open(fname, 'rb')
-    scalar = pickle.load(file)
-    file.close()
-    return scalar
+
+

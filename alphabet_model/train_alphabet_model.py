@@ -28,6 +28,7 @@ else:
 # Define hyper parameters
 LEARNING_RATE = 0.0001
 EPOCHS = 25
+
 BATCH_SIZE = 50
 
 # input parameters
