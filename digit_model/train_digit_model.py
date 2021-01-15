@@ -12,21 +12,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import utilities.data_processing as data
 import constants as c
 
-#use small pervious letter dataset to test new model configs
-'''mnist_test = data.get_data(c.FILE_TEST_ALPHABET, "csv")
-mnist_train = data.get_data(c.FILE_TRAIN_ALPHABET, "csv")
-
-digit_test_y = mnist_test[:, 0]
-digit_test_X = mnist_test[:, 1:]
-digit_train_y = mnist_train[:, 0]
-digit_train_X = mnist_train[:, 1:]
-
-digit_train_y = data.one_hot_vector(digit_train_y, 26)
-digit_test_y = data.one_hot_vector(digit_test_y, 26)'''
-
 # Flags to control execution
 TRAIN = False
 CONTINUE_TRAINING = False
+LOAD = True
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -44,45 +33,48 @@ BATCH_SIZE = 50
 # input parameters
 MODEL_NAME = f"digit_model-{int(time.time())}"
 
-# load, training and testing data into torch tensors
-digit_test_y = data.get_training_arr('digit_test_labels.npy')
-digit_test_X = data.get_training_arr('digit_test_features.npy')
-digit_train_y = data.get_training_arr('digit_train_labels.npy')
-digit_train_X = data.get_training_arr('digit_train_features.npy')
+if LOAD:
+    # load, training and testing data into torch tensors
+    digit_test_y = data.get_training_arr('digit_test_labels.npy')
+    digit_test_X = data.get_training_arr('digit_test_features.npy')
+    digit_train_y = data.get_training_arr('digit_train_labels.npy')
+    digit_train_X = data.get_training_arr('digit_train_features.npy')
 
-print(digit_test_X.shape, digit_test_y.shape)
-print(digit_train_X.shape, digit_train_y.shape)
+    print(digit_test_X.shape, digit_test_y.shape)
+    print(digit_train_X.shape, digit_train_y.shape)
 
-digit_train_X = torch.from_numpy(digit_train_X).type('torch.FloatTensor')
-digit_train_y = torch.from_numpy(digit_train_y)
-digit_test_X = torch.from_numpy(digit_test_X).type('torch.FloatTensor')
-digit_test_y = torch.from_numpy(digit_test_y)
+    digit_train_X = torch.from_numpy(digit_train_X).type('torch.FloatTensor')
+    digit_train_y = torch.from_numpy(digit_train_y)
+    digit_test_X = torch.from_numpy(digit_test_X).type('torch.FloatTensor')
+    digit_test_y = torch.from_numpy(digit_test_y)
 
 # Define CNN for digit model
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(8, 16, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(16, 48, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, padding=2)
+        self.conv2 = nn.Conv2d(8, 24, kernel_size=3, padding=2)
+        self.conv3 = nn.Conv2d(24, 24, kernel_size=3, padding=2)
+        self.conv4 = nn.Conv2d(24, 32, kernel_size=3, padding=2)
+        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
-        self.fc1 = nn.Linear(48*3*3, 512) # flattens cnn output
+        self.fc1 = nn.Linear(32*3*3, 512) # flattens cnn output
         self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        # drops out couple of random neurons in the neural network to avoid overfitting
-        x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.relu(F.max_pool2d(self.conv4(x), 2))
+        x = F.dropout(x, p=0.2, training=self.training)
+        x = F.relu(F.max_pool2d(self.conv5(x), 2))
 
         x = F.relu(self.avgpool(x))
 
-        x = x.view(-1, 3*3*48)  # .view is reshape, this flattens X for the linear layers
+        x = x.view(-1, 3*3*32)  # .view is reshape, this flattens X for the linear layers
         x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
+        x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
 
@@ -133,7 +125,7 @@ def test(size):
 
 def train():
     global LEARNING_RATE
-    NUM_BATCH = 100 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
+    NUM_BATCH = 300 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
     with open("digit_model.log", "a+") as f:
         init_time = time.time()
         for epoch in range(EPOCHS):
