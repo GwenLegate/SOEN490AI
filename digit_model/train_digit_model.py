@@ -26,8 +26,8 @@ else:
     print("Running on the CPU")
 
 # Define hyper parameters
-LEARNING_RATE = 0.0005
-EPOCHS = 100
+LEARNING_RATE = 0.001
+EPOCHS = 50
 BATCH_SIZE = 50
 
 # input parameters
@@ -35,44 +35,60 @@ MODEL_NAME = f"digit_model-{int(time.time())}"
 
 if LOAD:
     # load, training and testing data into torch tensors
-    digit_test_y = data.get_training_arr('digit_test_labels.npy')
-    digit_test_X = data.get_training_arr('digit_test_features.npy')
-    digit_train_y = data.get_training_arr('digit_train_labels.npy')
-    digit_train_X = data.get_training_arr('digit_train_features.npy')
+    data_X = data.get_training_arr("digit_train_features_shuffled.npy")
+    data_y = data.get_training_arr('digit_train_labels_shuffled.npy')
 
-    print(digit_test_X.shape, digit_test_y.shape)
-    print(digit_train_X.shape, digit_train_y.shape)
+    digit_X_validate, digit_X, digit_X_test = data_X[2776:8411, :], data_X[8411:, :], data_X[:2776, :]
+    digit_y_validate, digit_y, digit_y_test = data_y[2776:8411, :], data_y[8411:, :], data_y[:2776, :]
 
-    digit_train_X = torch.from_numpy(digit_train_X).type('torch.FloatTensor')
-    digit_train_y = torch.from_numpy(digit_train_y)
-    digit_test_X = torch.from_numpy(digit_test_X).type('torch.FloatTensor')
-    digit_test_y = torch.from_numpy(digit_test_y)
+    # use this config to do a hyperparameter search
+    # digit_X, digit_X_validate  = data_X[2776:8411, :], data_X[:2776, :]
+    # digit_y, digit_y_validate = data_y[2776:8411, :], data_y[:2776, :]
+
+    print(digit_X_validate.shape, digit_y_validate.shape)
+    print(digit_X.shape, digit_y.shape)
+
+    digit_train_X = torch.from_numpy(digit_X).type('torch.FloatTensor')
+    digit_train_y = torch.from_numpy(digit_y)
+    digit_test_X = torch.from_numpy(digit_X_validate).type('torch.FloatTensor')
+    digit_test_y = torch.from_numpy(digit_y_validate)
 
 # Define CNN for digit model
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, padding=2)
-        self.conv2 = nn.Conv2d(8, 24, kernel_size=3, padding=2)
-        self.conv3 = nn.Conv2d(24, 24, kernel_size=3, padding=2)
-        self.conv4 = nn.Conv2d(24, 32, kernel_size=3, padding=2)
-        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, padding=2)
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=3, stride=1, padding=2)
+        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
+        self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
-        self.fc1 = nn.Linear(32*3*3, 512) # flattens cnn output
+        self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
         self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
+        x = x.cpu()
+        x = x.detach().numpy()
+        np.save('visualize_activation1.npy', x)
+        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
+
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
+        x = x.cpu()
+        x = x.detach().numpy()
+        np.save('visualize_activation2.npy', x)
+        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
+
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
-        x = F.dropout(x, p=0.2, training=self.training)
+        x = F.relu(F.max_pool2d(self.conv5(x), 2))
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
 
         x = F.relu(self.avgpool(x))
 
-        x = x.view(-1, 3*3*32)  # .view is reshape, this flattens X for the linear layers
+        x = x.view(-1, 3*3*64)  # .view is reshape, this flattens X for the linear layers
         x = F.relu(self.fc1(x))
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
@@ -84,7 +100,6 @@ digit_cnn = Net().to(device)
 if CONTINUE_TRAINING:
     print("previous model loaded")
     digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/digit_model.pt", map_location=device))
-    #summary(digit_cnn, (10, 100, 100))
 
 # use Adam optimization and cross entropy loss
 optimizer = optim.Adam(digit_cnn.parameters(), lr=LEARNING_RATE)

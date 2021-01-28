@@ -23,17 +23,17 @@ device = torch.device("cpu")
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=2)
-        self.conv2 = nn.Conv2d(16, 16, kernel_size=5, stride=1, padding=3)
-        self.conv3 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=2)
-        self.conv4 = nn.Conv2d(32, 32, kernel_size=5, stride=1, padding=2)
-        self.conv5 = nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=3)
-        self.conv6 = nn.Conv2d(64, 88, kernel_size=3, stride=1, padding=3)
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=3, stride=1, padding=2)
+        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=3)
+        self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=3)
+        self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=3)
         #self.conv8 = nn.Conv2d(24, 32, kernel_size=3, stride=1, padding=2)
         #self.conv9 = nn.Conv2d(120, 160, kernel_size=3, stride=1, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
-        self.fc1 = nn.Linear(88*3*3, 512) # flattens cnn output
+        self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
         self.fc2 = nn.Linear(512, 2)
 
     def forward(self, x):
@@ -49,19 +49,19 @@ class Net(nn.Module):
 
         x = F.relu(self.avgpool(x))
 
-        x = x.view(-1, 3*3*88)  # .view is reshape, this flattens X for the linear layers
+        x = x.view(-1, 3*3*64)  # .view is reshape, this flattens X for the linear layers
         x = F.relu(self.fc1(x))
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
 
 '''testing'''
-a_vs_rest_cnn = Net()
-a_vs_rest_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/a_vs_rest_model.pt", map_location=device))
-a_vs_rest_cnn.cuda()
-a_vs_rest_cnn.to('cpu') # puts model on cpu
+w_vs_rest_cnn = Net()
+w_vs_rest_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/w_vs_rest_model.pt", map_location=device))
+w_vs_rest_cnn.cuda()
+w_vs_rest_cnn.to('cpu') # puts model on cpu
 
-alpha_key = {0:"A", 1:"NOT A"}
+alpha_key = {0:"W", 1:"NOT W"}
 
 ''' returns predictions from the model.  The default type 1 will return the predicted letter, type 2 will return a 
 one-hot-vector prediction for the inputs that can be used for comparison with the labels'''
@@ -72,7 +72,7 @@ def predict_az(input, type=1):
     except ValueError:
         _, w, l = input.shape
     input_tensor = torch.from_numpy(input).view(-1, w, l).type('torch.FloatTensor').to(device)
-    predict_vect = a_vs_rest_cnn(input_tensor.view(-1, 1, w, l))
+    predict_vect = w_vs_rest_cnn(input_tensor.view(-1, 1, w, l))
     predict_vect = predict_vect.cpu()
     predict_vect = predict_vect.detach().numpy()
     if type == 1:
@@ -99,11 +99,11 @@ def convert_labels_to_one_vs_rest(arr, letter):
 
 ''' load testing X and y'''
 # alpha_X_test has already been preprocessed
-SET = 1
+SET = 0
 
 if SET == 1:
-    data_X = get_training_arr('a_vs_rest_features_shuffled.npy')
-    data_y = get_training_arr('a_vs_rest_labels_shuffled.npy')
+    data_X = get_training_arr('w_vs_rest_features_shuffled.npy')
+    data_y = get_training_arr('w_vs_rest_labels_shuffled.npy')
 
     alpha_X_test = data_X[:100, :]
     alpha_y_test = data_y[:100, :]
@@ -128,7 +128,7 @@ print(sklearn.metrics.confusion_matrix(y1, y2))
 
 
 ''' predict one real image'''
-test_img = preprocess_image(c.GWEN_A)
+test_img = preprocess_image(c.GWEN_W)
 #print(test_img)
 '''x = get_training_arr('x.npy')
 test_img = x[0]

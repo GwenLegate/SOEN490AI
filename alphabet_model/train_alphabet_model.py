@@ -13,9 +13,9 @@ import utilities.data_processing as data
 import constants as c
 
 # Flags to control execution
-TRAIN = True
-CONTINUE_TRAINING = True
-LOAD = True
+TRAIN = False
+CONTINUE_TRAINING = False
+LOAD = False
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -26,8 +26,8 @@ else:
     print("Running on the CPU")
 
 # Define hyper parameters
-LEARNING_RATE = 0.0001
-EPOCHS = 25
+LEARNING_RATE = 0.001
+EPOCHS = 100
 
 BATCH_SIZE = 50
 
@@ -39,11 +39,16 @@ sign_totals = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:
 
 # load training and testing data and put them into torch tensors
 if LOAD:
-    data_X = data.get_training_arr("alpha_train_features_scale_shuffle.npy")
-    data_y = data.get_training_arr('alpha_train_labels_shuffle.npy')
+    data_X = data.get_training_arr("alpha_train_features_shuffled.npy")
+    data_y = data.get_training_arr('alpha_train_labels_shuffled.npy')
 
-    alpha_X_validate, alpha_X = data_X[:14400, :], data_X[14400:, :]
-    alpha_y_validate, alpha_y = data_y[:14400, :], data_y[14400:, :]
+    alpha_X_validate, alpha_X, hold_X = data_X[3520:10667, :], data_X[10667:, :], data_X[:3520, :]
+    alpha_y_validate, alpha_y, hold_y = data_y[3520:10667, :], data_y[10667:, :], data_y[:3520, :]
+
+    #use this config to do a hyperparameter search
+    #alpha_X, alpha_X_validate  = data_X[150:10667, :], data_X[:150, :]
+    #alpha_y, alpha_y_validate = data_y[150:10667, :], data_y[:150, :]
+
     print(alpha_X.shape, alpha_y.shape)
     print(alpha_X_validate.shape, alpha_y_validate.shape)
 
@@ -57,13 +62,15 @@ if LOAD:
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=2)
-        self.conv2 = nn.Conv2d(8, 32, kernel_size=3, stride=1, padding=2)
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
-        self.conv4 = nn.Conv2d(64, 88, kernel_size=3, stride=1, padding=2)
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=3, stride=1, padding=2)
+        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=3)
+        self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
-        self.fc1 = nn.Linear(88*3*3, 512) # flattens cnn output
+        self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
         self.fc2 = nn.Linear(512, 26)
 
     def forward(self, x):
@@ -80,14 +87,13 @@ class Net(nn.Module):
         x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
 
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
-        # drops out couple of random neurons in the neural network to avoid overfitting
-        x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.relu(F.max_pool2d(self.conv5(x), 2))
+        x = F.relu(F.max_pool2d(self.conv6(x), 2))
 
         x = F.relu(self.avgpool(x))
 
-        x = x.view(-1, 3*3*88)  # .view is reshape, this flattens X for the linear layers
+        x = x.view(-1, 3*3*64)  # .view is reshape, this flattens X for the linear layers
         x = F.relu(self.fc1(x))
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
@@ -120,7 +126,6 @@ alphabet_cnn = Net().to(device)
 if CONTINUE_TRAINING:
     print("previous model loaded")
     alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/alphabet_model.pt", map_location=device))
-    #summary(alphabet_cnn, (10, 200, 200))
 
 optimizer = optim.Adam(alphabet_cnn.parameters(), lr=LEARNING_RATE)
 loss_fn = nn.CrossEntropyLoss()
@@ -138,13 +143,13 @@ def test(size):
 # training method, includes a log file to track training progress
 def train():
     global LEARNING_RATE
-    NUM_BATCH = 100 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
+    NUM_BATCH = 300 # don't want to test every pass, set "NUM_BATCH"  to test every NUM_BATCH pass
     with open("alphabet_model.log", "a+") as f:
         init_time = time.time()
         for epoch in range(EPOCHS):
             print(epoch)
 
-            if epoch == 10 or epoch == 20:
+            if epoch == 25 or epoch == 50 or epoch == 75:
                 # save progress periodically in case we run out of time on the gpu
                 torch.save(alphabet_cnn.state_dict(), c.MODEL_SAVE_PATH + "/alphabet_model.pt")
             for i in range(0, len(alpha_X), BATCH_SIZE):

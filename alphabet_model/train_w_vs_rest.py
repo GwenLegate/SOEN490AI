@@ -26,7 +26,7 @@ else:
     print("Running on the CPU")
 
 # Define hyper parameters
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.001
 EPOCHS = 50
 
 BATCH_SIZE = 50
@@ -38,8 +38,8 @@ sign_totals = {0:0, 1:0}
 
 # load training and testing data and put them into torch tensors
 if LOAD:
-    data_X = data.get_training_arr('a_vs_rest_features_shuffled.npy')
-    data_y = data.get_training_arr('a_vs_rest_labels_shuffled.npy')
+    data_X = data.get_training_arr('w_vs_rest_features_shuffled.npy')
+    data_y = data.get_training_arr('w_vs_rest_labels_shuffled.npy')
 
     alpha_X_validate, alpha_X, hold_X = data_X[100:900, :], data_X[900:, :], data_X[:100, :]
     alpha_y_validate, alpha_y, hold_y = data_y[100:900, :], data_y[900:, :], data_y[:100, :]
@@ -59,7 +59,7 @@ class Net(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
         self.conv2 = nn.Conv2d(16, 24, kernel_size=3, stride=1, padding=2)
-        self.conv3 = nn.Conv2d(16, 32, kernel_size=5, stride=1, padding=3)
+        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=3)
         self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
         self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=3)
         self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=3)
