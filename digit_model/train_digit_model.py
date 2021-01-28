@@ -35,8 +35,8 @@ MODEL_NAME = f"digit_model-{int(time.time())}"
 
 if LOAD:
     # load, training and testing data into torch tensors
-    data_X = data.get_training_arr("digit_train_features_shuffled.npy")
-    data_y = data.get_training_arr('digit_train_labels_shuffled.npy')
+    data_X = data.get_training_arr("digit_features_shuffled.npy")
+    data_y = data.get_training_arr('digit_labels_shuffled.npy')
 
     digit_X_validate, digit_X, digit_X_test = data_X[2776:8411, :], data_X[8411:, :], data_X[:2776, :]
     digit_y_validate, digit_y, digit_y_test = data_y[2776:8411, :], data_y[8411:, :], data_y[:2776, :]
