@@ -23,14 +23,17 @@ device = torch.device("cpu")
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=2)
-        self.conv2 = nn.Conv2d(8, 32, kernel_size=3, stride=1, padding=2)
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
-        self.conv4 = nn.Conv2d(64, 88, kernel_size=3, stride=1, padding=2)
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=2)
+        self.conv3 = nn.Conv2d(24, 24, kernel_size=3, stride=1, padding=2)
+        self.conv4 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv6 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv7 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
-        self.fc1 = nn.Linear(88*3*3, 512) # flattens cnn output
-        self.fc2 = nn.Linear(512, 26)
+        self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
+        self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -46,23 +49,18 @@ class Net(nn.Module):
         x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
 
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
-        # drops out couple of random neurons in the neural network to avoid overfitting
-        x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.relu(F.max_pool2d(self.conv5(x), 2))
+        x = F.relu(F.max_pool2d(self.conv6(x), 2))
+        x = F.relu(F.max_pool2d(self.conv7(x), 2))
 
         x = F.relu(self.avgpool(x))
 
-        x = x.view(-1, 3*3*88)  # .view is reshape, this flattens X for the linear layers
+        x = x.view(-1, 3*3*64)  # .view is reshape, this flattens X for the linear layers
         x = F.relu(self.fc1(x))
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
-
-'''global variables and flags to control execution'''
-PLOT_ACCURACY_LOSS = False
-REPROCESS_TEST_IMAGES = False
-RECALCULATE_TEST_PREDICTIONS = False
 
 
 '''testing'''
@@ -82,22 +80,32 @@ def predict_az(input, type=1):
         w, l = input.shape
     except ValueError:
         _, w, l = input.shape
+
     input_tensor = torch.from_numpy(input).view(-1, w, l).type('torch.FloatTensor').to(device)
     predict_vect = alphabet_cnn(input_tensor.view(-1, 1, w, l))
     predict_vect = predict_vect.cpu()
     predict_vect = predict_vect.detach().numpy()
     if type == 1:
         predict_val = np.argmax(predict_vect)
-        return alpha_key[predict_val]
+        return alpha_key[predict_val], predict_vect
     if type == 2:
         return predict_vect
 
 ''' load testing X and y'''
-# alpha_X_test has already been preprocessed
-'''alpha_X_test = get_training_arr('alpha_test_inputs.npy')
-alpha_y_test = get_training_arr('alphabet_test_labels.npy')
+SET = 0
+
+if SET == 1:
+    data_X = get_training_arr('alpha_train_features_shuffled.npy')
+    data_y = get_training_arr('alpha_train_labels_shuffled.npy')
+
+    alpha_X_test = data_X[:100, :]
+    alpha_y_test = data_y[:100, :]
+else:
+    alpha_X_test = get_training_arr('alpha_test_inputs.npy')
+    alpha_y_test = get_training_arr('alphabet_test_labels.npy')
 
 alpha_predict_y = predict_az(alpha_X_test.reshape(-1, 200, 200), type=2)
+#print(alpha_predict_y)
 
 y1 = numeric_class(alpha_y_test)
 y2 = numeric_class(alpha_predict_y)
@@ -106,16 +114,20 @@ print(sklearn.metrics.accuracy_score(y1, y2))
 print(sklearn.metrics.precision_score(y1, y2, average='macro'))
 print(sklearn.metrics.recall_score(y1, y2, average='macro'))
 print(sklearn.metrics.confusion_matrix(y1, y2))
-'''
+
 
 ''' predict one real image'''
-test_img = preprocess_image(c.GWEN_C)
+test_img = preprocess_image(c.GWEN_W)
+#print(test_img)
 '''x = get_training_arr('x.npy')
-test_img = x[0]'''
-test_img = preprocess_image(test_img)
+test_img = x[0]
+test_img = preprocess_image(test_img)'''
 
-plt.imshow((test_img * 255), cmap='gray')
-plt.show()
-print(predict_az(test_img))
+'''plt.imshow((test_img * 255), cmap='gray')
+plt.show()'''
 
+
+res, vect = predict_az(test_img)
+print(res)
+print(vect)
 

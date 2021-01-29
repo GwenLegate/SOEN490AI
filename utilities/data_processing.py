@@ -57,7 +57,7 @@ def preprocess_image(img_path):
 
 '''reformat y to one-hot-vector-format'''
 def one_hot_vector(y, num_classes):
-    reformat_y = np.zeros((len(y), num_classes))
+    reformat_y = np.zeros((len(y), num_classes)).astype(int)
     j = 0
     while j < len(y):
         reformat_y[j][y[j]] = 1
@@ -69,7 +69,7 @@ def one_hot_vector(y, num_classes):
 def numeric_class(y):
     arr = np.empty(0)
     for i in y:
-        arr = np.append(arr, np.argmax(i))
+        arr = np.append(arr, np.argmax(i)).astype(int)
     return arr
 
 ''' check if file exists and returns loaded numpy array if it does, otherwise it returns an empty array'''

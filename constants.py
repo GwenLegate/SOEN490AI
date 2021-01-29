@@ -38,4 +38,8 @@ GWEN_K = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
 GWEN5 = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen5.jpg"
 GWEN_L = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
-                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_l-removebg.png"
+                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_l.png"
+GWEN_A = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
+                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_a.png"
+GWEN_A_NO_NOISE = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
+                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/i01_gwen_a.png"
