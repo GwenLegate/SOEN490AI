@@ -9,7 +9,7 @@ independently to see which one yields the best results.
 * training "master models" that are capable of returning the correct digit or letter given an image of a digit or a letter
 * training individual one-vs-the-rest models capable of identifying if an image is or is not a particular letter or digit
 
-### Set up PyTorch Environment:
+## Set up PyTorch Environment:
 
 go to https://pytorch.org under the "Quick start locally" header select your configuration (you will nee CUDA to make 
 your verion of PyTorch usable on an GPU) and copy the command that is generated in the "run this command" space.
@@ -21,17 +21,31 @@ If you find that you are missing any of these libraries, install them manually u
 Next cd utilities and execute <python version.py> to verify your installation- it should print the installed version of 
 PyTorch to the console
 
-### Installing other required dependencies
+## Working with the GPU
+to set PyTorch up to work on a GPU, you will need CUDA, here are the relevant links.
+CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
+cudnn: https://developer.nvidia.com/cudnn (download, extract and move the bin, lib, include directories to your CUDA 
+toolkit directory )
+
+## Installing other required dependencies
 cd to the SOEN490AI directory and execute <pip install -r requirements.txt> to install other required dependencies
 for the project
 
-### Datasets
+## Models:
+* the training of the alphabet model was done in the train_alphabet_model.py script located in the alphabet_model directory
+* testing and verification was done using the test_alphabet_model.py script also located in the alphabet_model directory
+* attempts at training one-vs-the-rest models for both "A" and "W" were attempted but abandoned after showing strong 
+  tendencies to default to the "NOT A" or "NOT W" options in both cases  
+* the training of the digit model was done in the train_digit_model.py script located in the digit_model directory
+* testing and verification was done using the test_digit_model.py script also located in the digit_model directory
+* to get a better idea of how the model is behaving, I save copies of the first two layers and created a tool to view 
+  their activations in evaluation_metrics.py in the utilities directory
 
 ## Alphabet model dataset
 The basis of the alphabet dataset currently used to train the alphabet model is found on Kaggle under the header 
 “ASL Alphabet”. It consists of 3000 instances of letters A-Z, each image is 200x200 pixels.  
 
-## Known Limitations of the "ASL Alphabet" Dataset 
+### Known Limitations of the "ASL Alphabet" Dataset 
 * Both the letter “T” and the letter “G” are incorrect
 * Images are all taken with similar backgrounds using a small number of subjects
   
@@ -44,7 +58,7 @@ new images with the correct sign for “G” so all 3000 “G” images able to 
 also take advantage of the diversity present in the new images, I replaced 200-400 of each letter with images from the 
 new set.
 
-## Known Limitations of the "ASL and some words" Dataset
+### Known Limitations of the "ASL and some words" Dataset
 * many of the images in this dataset are reused from the "ASL Alphabet" dataset, limiting the number of new images available 
 * Images need to be verified for quality since some of them are unusable. 
 * Extra images for the letter “T” that are correct are provided but many of the images of "T" have the same error as the
@@ -57,7 +71,6 @@ numbers and any numbers whose quality was deemed usable were added to the datase
 
 Due to the variation in the numbers of usable images in the "ASL and some words" dataset, the numbers of images are not 
 perfectly balanced but were kept close enough that this factor should not have a significant effect on the results.
-
 
 ## Pre-Processing of the image data
 The script angels_image_processing_tool.py located in the image_processing directory contains code to sharpen the edges 
@@ -74,24 +87,7 @@ The scaling is applied in the proper order to each image using the method prepro
 data_processing.py script found in the utilities directory.  This method will also be used to preprocess images in the
 proper order when they are passed in the In Plain Sight App.
 
-### Working with the GPU
-to set PyTorch up to wot=rk on a GPU, you will need CUDA, here are the relevant links.
-CUDA toolkit: https://developer.nvidia.com/cuda-toolkit
-cudnn: https://developer.nvidia.com/cudnn (download, extract and move the bin, lib, include directories to your CUDA 
-toolkit directory )
-
-## Models:
-
-* the training of the alphabet model was done in the train_alphabet_model.py script located in the alphabet_model directory
-* testing and verification was done using the test_alphabet_model.py script also located in the alphabet_model directory
-* attempts at training one-vs-the-rest models for both "A" and "W" were attempted but abandoned after showing strong 
-  tendencies to default to the "NOT A" or "NOT W" options in both cases  
-* the training of the digit model was done in the train_digit_model.py script located in the digit_model directory
-* testing and verification was done using the test_digit_model.py script also located in the digit_model directory
-* to get a better idea of how the model is behaving, I save copies of the first two layers and created a tool to view 
-  their activations in evaluation_metrics.py in the utilities directory
-
-** References
+## References
 \[\1\]\ ASL Alphabet (The data set is a collection of images of alphabets from the American Sign Language, separated in 
 29 folders which represent the various classes; accessed November 25, 2020). 
 https://www.kaggle.com/grassknoted/asl-alphabet
