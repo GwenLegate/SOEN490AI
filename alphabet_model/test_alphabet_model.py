@@ -24,25 +24,35 @@ class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
-        self.conv2 = nn.Conv2d(16, 24, kernel_size=3, stride=1, padding=2)
-        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=3)
-        self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=2)
+        self.conv3 = nn.Conv2d(24, 24, kernel_size=3, stride=1, padding=2)
+        self.conv4 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
         self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
-        self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
+        self.conv6 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv7 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
-        self.fc2 = nn.Linear(512, 26)
+        self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
+        x = x.cpu()
+        x = x.detach().numpy()
+        np.save('visualize_activation1.npy', x)
+        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
+
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
+        x = x.cpu()
+        x = x.detach().numpy()
+        np.save('visualize_activation2.npy', x)
+        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
+
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
-        #x = F.dropout(x, p=0.1, training=self.training)
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
-        #x = F.dropout(x, p=0.2, training=self.training)
         x = F.relu(F.max_pool2d(self.conv6(x), 2))
+        x = F.relu(F.max_pool2d(self.conv7(x), 2))
 
         x = F.relu(self.avgpool(x))
 
@@ -93,8 +103,6 @@ if SET == 1:
 else:
     alpha_X_test = get_training_arr('alpha_test_inputs.npy')
     alpha_y_test = get_training_arr('alphabet_test_labels.npy')
-
-#np.savetxt("foo.csv", alpha_y_test, delimiter=",")
 
 alpha_predict_y = predict_az(alpha_X_test.reshape(-1, 200, 200), type=2)
 #print(alpha_predict_y)

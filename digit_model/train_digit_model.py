@@ -13,7 +13,7 @@ import utilities.data_processing as data
 import constants as c
 
 # Flags to control execution
-TRAIN = False
+TRAIN = True
 CONTINUE_TRAINING = False
 LOAD = True
 
@@ -38,12 +38,12 @@ if LOAD:
     data_X = data.get_training_arr("digit_features_shuffled.npy")
     data_y = data.get_training_arr('digit_labels_shuffled.npy')
 
-    digit_X_validate, digit_X, digit_X_test = data_X[2776:8411, :], data_X[8411:, :], data_X[:2776, :]
-    digit_y_validate, digit_y, digit_y_test = data_y[2776:8411, :], data_y[8411:, :], data_y[:2776, :]
+    digit_X_validate, digit_X, digit_X_test = data_X[1000:8411, :], data_X[8411:, :], data_X[:1000, :]
+    digit_y_validate, digit_y, digit_y_test = data_y[1000:8411, :], data_y[8411:, :], data_y[:1000, :]
 
     # use this config to do a hyperparameter search
-    # digit_X, digit_X_validate  = data_X[2776:8411, :], data_X[:2776, :]
-    # digit_y, digit_y_validate = data_y[2776:8411, :], data_y[:2776, :]
+    #digit_X, digit_X_validate  = data_X[1000:8411, :], data_X[:1000, :]
+    #digit_y, digit_y_validate = data_y[1000:8411, :], data_y[:1000, :]
 
     print(digit_X_validate.shape, digit_y_validate.shape)
     print(digit_X.shape, digit_y.shape)
@@ -58,11 +58,11 @@ class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
-        self.conv2 = nn.Conv2d(16, 24, kernel_size=3, stride=1, padding=2)
-        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
-        self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
-        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
-        self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=2)
+        self.conv3 = nn.Conv2d(24, 32, kernel_size=3, stride=1, padding=2)
+        self.conv4 = nn.Conv2d(32, 32, kernel_size=5, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
+        self.conv6 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
@@ -84,7 +84,7 @@ class Net(nn.Module):
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
-        x = F.relu(F.max_pool2d(self.conv5(x), 2))
+        x = F.relu(F.max_pool2d(self.conv6(x), 2))
 
         x = F.relu(self.avgpool(x))
 
@@ -93,7 +93,6 @@ class Net(nn.Module):
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
-
 
 digit_cnn = Net().to(device)
 # load current model if you want to continue to build off it
@@ -108,9 +107,11 @@ loss_fn = nn.CrossEntropyLoss()
 # method to pass data through the model, set train to True if it is a training pass.
 # Returns accuracy and loss of X, y passed
 def feed_model(X, y, train=False):
+   # print(X.shape, y.shape)
     if train:
         digit_cnn.zero_grad()
     outputs = digit_cnn(X)
+   # print(outputs.shape)
     compare = zip(outputs, y)
     num_correct = 0
     for n, m in compare:
@@ -135,7 +136,7 @@ def test(size):
     random_start = np.random.randint(len(digit_test_X) - size)
     X, y = digit_test_X[random_start:random_start + size], digit_test_y[random_start:random_start + size]
     with torch.no_grad():
-        test_accuracy, test_loss = feed_model(X.view(-1, 1, 100, 100).to(device), y.to(device))
+        test_accuracy, test_loss = feed_model(X.view(-1, 1, 200, 200).to(device), y.to(device))
     return test_accuracy, test_loss
 
 def train():
@@ -150,7 +151,7 @@ def train():
                 # save progress periodically in case we run out of time on the gpu
                 torch.save(digit_cnn.state_dict(), c.MODEL_SAVE_PATH + "/digit_model.pt")
             for i in range(0, len(digit_train_X), BATCH_SIZE):
-                batch_x = digit_train_X[i:i + BATCH_SIZE].view(-1, 1, 100, 100)
+                batch_x = digit_train_X[i:i + BATCH_SIZE].view(-1, 1, 200, 200)
                 batch_y = digit_train_y[i:i + BATCH_SIZE]
                 batch_x, batch_y = batch_x.to(device), batch_y.to(device)
                 train_accuracy, train_loss = feed_model(batch_x, batch_y, train=True) #train model with batch data
