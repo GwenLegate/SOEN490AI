@@ -34,17 +34,7 @@ class Net(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
-        x = x.cpu()
-        x = x.detach().numpy()
-        np.save('visualize_activation1.npy', x)
-        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
-
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        x = x.cpu()
-        x = x.detach().numpy()
-        np.save('visualize_activation2.npy', x)
-        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
-
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
