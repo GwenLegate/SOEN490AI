@@ -12,7 +12,7 @@ independently to see which one yields the best results.
 ## Set up PyTorch Environment:
 
 go to https://pytorch.org under the "Quick start locally" header select your configuration (you will nee CUDA to make 
-your verion of PyTorch usable on an GPU) and copy the command that is generated in the "run this command" space.
+your version of PyTorch usable on an GPU) and copy the command that is generated in the "run this command" space.
 
 Run the command copied in the previous step in the console. running this command should automatically install 
 numpy, future, pillow and torchvision.
@@ -88,14 +88,14 @@ data_processing.py script found in the utilities directory.  This method will al
 proper order when they are passed in the In Plain Sight App.
 
 ## References
-\[\1\]\ ASL Alphabet (The data set is a collection of images of alphabets from the American Sign Language, separated in 
+\[1\] ASL Alphabet (The data set is a collection of images of alphabets from the American Sign Language, separated in 
 29 folders which represent the various classes; accessed November 25, 2020). 
 https://www.kaggle.com/grassknoted/asl-alphabet
 
-\[\2\]\ ASL_and_some_words (images of letters,numbers and some words in ASL; accessed Jan 12 2021) 
+\[2\] ASL_and_some_words (images of letters,numbers and some words in ASL; accessed Jan 12 2021) 
 https://www.kaggle.com/belalelwikel/asl-and-some-words
 
-\[\3\]\ Sign Language Digits Dataset (Turkey Ankara Ayrancı Anadolu High School's Sign Language Digits Dataset accessed 
+\[3\] Sign Language Digits Dataset (Turkey Ankara Ayrancı Anadolu High School's Sign Language Digits Dataset accessed 
 October 28, 2020) https://github.com/ardamavi/Sign-Language-Digits-Dataset
 
 \[4\] Sumit Saha, "A Comprehensive Guide to Convolutional Neural Networks — the ELI5 way." Towards Data Science.com. 
