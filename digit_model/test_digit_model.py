@@ -74,7 +74,7 @@ def predict_az(input, type=1):
         return predict_vect
 
 ''' load testing X and y'''
-data_X = get_training_arr('digit_features_shuffled.npy')
+'''data_X = get_training_arr('digit_features_shuffled.npy')
 data_y = get_training_arr('digit_labels_shuffled.npy')
 
 digit_X_test = data_X[:1000, :]
@@ -89,7 +89,7 @@ y2 = numeric_class(alpha_predict_y)
 print(sklearn.metrics.accuracy_score(y1, y2))
 print(sklearn.metrics.precision_score(y1, y2, average='macro'))
 print(sklearn.metrics.recall_score(y1, y2, average='macro'))
-print(sklearn.metrics.confusion_matrix(y1, y2))
+print(sklearn.metrics.confusion_matrix(y1, y2))'''
 
 
 ''' predict one real image'''
