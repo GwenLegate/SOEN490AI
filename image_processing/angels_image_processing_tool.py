@@ -26,7 +26,7 @@ def sharpen(img):
 
 # ================ MAIN ===================
 def process_image(img):
-    no_noise = opening_img(grayscale(apply_gaussian_blur(img)))
+    no_noise = opening_img(apply_gaussian_blur(img))
     sharpened = sharpen(no_noise)
 
     return sharpened
