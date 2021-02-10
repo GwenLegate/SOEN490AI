@@ -23,9 +23,6 @@ def apply_noise(img_path):
     val = randint(0, 2)
     val_seed = randint(0, 100) # For pseudo randomness in the noise application
 
-    print(val)
-    print(val_seed)
-
     img = cv2.imread(img_path, 0)
 
     '''
@@ -39,5 +36,8 @@ def apply_noise(img_path):
         noisy_image = generate_random_noise(img, SALT_PEPPER, val_seed)
     else:
         noisy_image = generate_random_noise(img, POISSON, val_seed)
+
+    #cv2.imshow('Noisy image', noisy_image)
+    #cv2.waitKey(0)
 
     return noisy_image
