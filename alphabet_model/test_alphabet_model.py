@@ -24,35 +24,24 @@ class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
-        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=2)
-        self.conv3 = nn.Conv2d(24, 24, kernel_size=3, stride=1, padding=2)
-        self.conv4 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
-        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
-        self.conv6 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
-        self.conv7 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=3)
+        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
+        self.conv4 = nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=2)
+        self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
+
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
-        self.fc2 = nn.Linear(512, 10)
+        self.fc2 = nn.Linear(512, 26)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
-        x = x.cpu()
-        x = x.detach().numpy()
-        np.save('visualize_activation1.npy', x)
-        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
-
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        x = x.cpu()
-        x = x.detach().numpy()
-        np.save('visualize_activation2.npy', x)
-        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
-
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
         x = F.relu(F.max_pool2d(self.conv6(x), 2))
-        x = F.relu(F.max_pool2d(self.conv7(x), 2))
 
         x = F.relu(self.avgpool(x))
 

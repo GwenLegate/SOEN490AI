@@ -13,9 +13,9 @@ import utilities.data_processing as data
 import constants as c
 
 # Flags to control execution
-TRAIN = False
+TRAIN = True
 CONTINUE_TRAINING = False
-LOAD = False
+LOAD = True
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -27,7 +27,7 @@ else:
 
 # Define hyper parameters
 LEARNING_RATE = 0.001
-EPOCHS = 100
+EPOCHS = 25
 
 BATCH_SIZE = 50
 
@@ -42,12 +42,12 @@ if LOAD:
     data_X = data.get_training_arr("alpha_train_features_shuffled.npy")
     data_y = data.get_training_arr('alpha_train_labels_shuffled.npy')
 
-    alpha_X_validate, alpha_X, hold_X = data_X[3520:10667, :], data_X[10667:, :], data_X[:3520, :]
-    alpha_y_validate, alpha_y, hold_y = data_y[3520:10667, :], data_y[10667:, :], data_y[:3520, :]
+    '''alpha_X_validate, alpha_X, hold_X = data_X[3520:10667, :], data_X[10667:, :], data_X[:3520, :]
+    alpha_y_validate, alpha_y, hold_y = data_y[3520:10667, :], data_y[10667:, :], data_y[:3520, :]'''
 
     #use this config to do a hyperparameter search
-    #alpha_X, alpha_X_validate  = data_X[150:10667, :], data_X[:150, :]
-    #alpha_y, alpha_y_validate = data_y[150:10667, :], data_y[:150, :]
+    alpha_X, alpha_X_validate  = data_X[150:10667, :], data_X[:150, :]
+    alpha_y, alpha_y_validate = data_y[150:10667, :], data_y[:150, :]
 
     print(alpha_X.shape, alpha_y.shape)
     print(alpha_X_validate.shape, alpha_y_validate.shape)
@@ -63,11 +63,12 @@ class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
-        self.conv2 = nn.Conv2d(16, 24, kernel_size=3, stride=1, padding=2)
-        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=3)
-        self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
-        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=3)
+        self.conv3 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
+        self.conv4 = nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=2)
         self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
+
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
@@ -90,6 +91,7 @@ class Net(nn.Module):
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
         x = F.relu(F.max_pool2d(self.conv6(x), 2))
+
 
         x = F.relu(self.avgpool(x))
 
