@@ -39,9 +39,9 @@ def check_balance(dict, labels):
 '''given an image path, the function returns a numpy array of the image with gaussian blur technique, greyscaled, 
 centered around the mean pixel value and normalized pixel values between 0-1 
 0 and 1'''
-def preprocess_image(img_path):
+def preprocess_image(image):
     #gaussian blur and sharpen edges then flatten image
-    img = np.array(process_image(img_path))
+    img = np.array(process_image(image))
     x, y = img.shape
     img = np.ravel(img)
 
