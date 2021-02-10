@@ -33,7 +33,7 @@ def apply_noise(img_path):
     img = cv2.imread(img_path, 0)
 
     # Do not apply the noise filter in 90% of images
-    if check_percentage(90):
+    if check_percentage(10):
         return img
     else:
         '''
