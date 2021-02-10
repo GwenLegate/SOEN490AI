@@ -3,6 +3,11 @@ from random import seed
 from random import randint
 import cv2
 from skimage.util import random_noise
+import matplotlib.pyplot as plt
+import sys, os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+import constants as c
 
 GAUSSIAN = "gaussian"
 SALT_PEPPER = "s&p"
@@ -41,3 +46,7 @@ def apply_noise(img_path):
     #cv2.waitKey(0)
 
     return noisy_image
+
+'''img = apply_noise(c.GWEN_B)
+plt.imshow(img)
+plt.show()'''

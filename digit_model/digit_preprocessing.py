@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utilities.data_processing import preprocess_image, get_training_arr, one_hot_vector, numeric_class
 import constants as c
+from image_processing.noise_processing_tool import apply_noise
 
 ''' takes an input array "digits", containing the directories to be processed and a string fname to save the output under'''
 def preprocess_training_images(digits, fname):
@@ -13,7 +14,8 @@ def preprocess_training_images(digits, fname):
         for root, dirs, files in os.walk(c.TRAIN_DIGIT_IMGS_BASEDIR+digit):
             for name in files:
                 print(name)
-                px = preprocess_image(os.path.join(root, name))
+                px = apply_noise(os.path.join(root, name))
+                px = preprocess_image(px)
                 row, col, = px.shape
 
                 if row == 200 and col == 200:

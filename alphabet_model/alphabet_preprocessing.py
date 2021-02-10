@@ -4,6 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
+from image_processing.noise_processing_tool import apply_noise
 from utilities.data_processing import get_training_arr, preprocess_image, get_data, one_hot_vector, numeric_class
 import constants as c
 
@@ -16,7 +17,8 @@ def preprocess_training_images(letters, fname):
         for root, dirs, files in os.walk(c.TRAIN_ALPHABET_IMGS_BASEDIR+letter):
             for name in files:
                 print(name)
-                px = preprocess_image(os.path.join(root, name))
+                px = apply_noise(os.path.join(root, name))
+                px = preprocess_image(px)
                 row, col, = px.shape
 
                 if row == 200 and col == 200:
