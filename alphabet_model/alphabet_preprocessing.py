@@ -1,5 +1,7 @@
-import sys, os
+import sys, os, gc
 import numpy as np
+import random
+import copy
 import pickle
 import matplotlib.pyplot as plt
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -116,3 +118,26 @@ def shuffle_train_set(train_X, train_y, classes, num_samples):
     train_X, train_y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
     train_y = one_hot_vector(train_y.astype(int), num_classes=classes)
     return train_X, train_y
+
+# I ran into memory problems after adding noise to the images and had to devise a way of splitting the training sets in 2
+# so that the samples were still shuffled and contained random distributions in each set.  Since set 1 contains shuffled
+# instances of the first half of the alphabet and set 2 contains shuffled instances of the second half of the alphabet,
+# I am switching half the entries in each set for randomly generated indices
+def swap(feat_X1, label_y1, feat_X2, label_y2):
+    arr_len, _ = label_y1.shape
+    rand_len = int(arr_len / 2)
+    rand = random.sample(range(arr_len), rand_len)
+    for i in rand:
+        lab_temp = copy.deepcopy(label_y1[i, :])
+        feat_temp = copy.deepcopy(feat_X1[i, :, :])
+        if i % 1000 == 0:
+            print(lab_temp)
+        label_y1[i, :] = label_y2[i, :]
+        feat_X1[i, :, :] = feat_X2[i, :, :]
+        label_y2[i, :] = lab_temp
+        feat_X2[i, :, :] = feat_temp
+        if i % 1000 == 0:
+            print(label_y1[i, :], label_y2[i, :])
+    return feat_X1, label_y1, feat_X2, label_y2
+
+

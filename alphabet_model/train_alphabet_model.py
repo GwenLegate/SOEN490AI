@@ -7,6 +7,7 @@ import numpy as np
 import time
 import sys
 import os
+import gc
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 import utilities.data_processing as data
@@ -27,7 +28,7 @@ else:
 
 # Define hyper parameters
 LEARNING_RATE = 0.001
-EPOCHS = 25
+EPOCHS = 50
 
 BATCH_SIZE = 50
 
@@ -37,17 +38,23 @@ MODEL_NAME = f"alpha_model-{int(time.time())}" # make logfile (time.time() gives
 sign_totals = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0, 14:0, 15:0, 16:0, 17:0, 18:0,
                19:0, 20:0, 21:0, 22:0, 23:0, 24:0, 25:0}
 
+gc.collect()
 # load training and testing data and put them into torch tensors
 if LOAD:
-    data_X = data.get_training_arr("alpha_train_features_shuffled.npy")
+    '''data_X = data.get_training_arr("alpha_train_features_shuffled.npy")
     data_y = data.get_training_arr('alpha_train_labels_shuffled.npy')
 
-    '''alpha_X_validate, alpha_X, hold_X = data_X[3520:10667, :], data_X[10667:, :], data_X[:3520, :]
+    alpha_X_validate, alpha_X, hold_X = data_X[3520:10667, :], data_X[10667:, :], data_X[:3520, :]
     alpha_y_validate, alpha_y, hold_y = data_y[3520:10667, :], data_y[10667:, :], data_y[:3520, :]'''
 
+    alpha_X_validate = data.get_training_arr("alpha_validate_features.npy")
+    alpha_y_validate = data.get_training_arr('alpha_validate_labels.npy')
+    alpha_X = data.get_training_arr('alpha_train_features_shuffled.npy')
+    alpha_y = data.get_training_arr('alpha_train_labels_shuffled.npy')
+
     #use this config to do a hyperparameter search
-    alpha_X, alpha_X_validate  = data_X[150:10667, :], data_X[:150, :]
-    alpha_y, alpha_y_validate = data_y[150:10667, :], data_y[:150, :]
+   # alpha_X, alpha_X_validate  = data_X[150:10667, :], data_X[:150, :]
+   # alpha_y, alpha_y_validate = data_y[150:10667, :], data_y[:150, :]
 
     print(alpha_X.shape, alpha_y.shape)
     print(alpha_X_validate.shape, alpha_y_validate.shape)
