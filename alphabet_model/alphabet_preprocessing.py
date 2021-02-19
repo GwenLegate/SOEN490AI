@@ -11,7 +11,7 @@ from utilities.data_processing import get_training_arr, preprocess_image, get_da
 import constants as c
 
 ''' takes an input array "letters", containing the directories to be processed and a string fname to save the output under'''
-def preprocess_training_images(letters, fname):
+def preprocess_training_images(letters, fname, noise = False):
     # preprocess images and add them to the input feature array
     alpha_X = get_training_arr(fname)
     print(alpha_X.shape)
@@ -19,8 +19,12 @@ def preprocess_training_images(letters, fname):
         for root, dirs, files in os.walk(c.TRAIN_ALPHABET_IMGS_BASEDIR+letter):
             for name in files:
                 print(name)
-                px = apply_noise(os.path.join(root, name))
-                px = preprocess_image(px)
+                if noise:
+                    px = apply_noise(os.path.join(root, name))
+                    px = preprocess_image(px)
+                else:
+                    px = preprocess_image(os.path.join(root, name))
+
                 row, col, = px.shape
 
                 if row == 200 and col == 200:
@@ -139,5 +143,4 @@ def swap(feat_X1, label_y1, feat_X2, label_y2):
         if i % 1000 == 0:
             print(label_y1[i, :], label_y2[i, :])
     return feat_X1, label_y1, feat_X2, label_y2
-
 

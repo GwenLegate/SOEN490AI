@@ -66,3 +66,10 @@ def shuffle_train_set(train_X, train_y, classes, num_samples):
     train_y = one_hot_vector(train_y.astype(int), num_classes=classes)
     return train_X, train_y
 
+preprocess_training_images(['3'], '3.npy')
+preprocess_training_images(['4'], '4.npy')
+preprocess_training_images(['5'], '5.npy')
+preprocess_training_images(['6'], '6.npy')
+preprocess_training_images(['7'], '7.npy')
+preprocess_training_images(['8'], '8.npy')
+preprocess_training_images(['9'], '9.npy')

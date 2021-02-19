@@ -2,7 +2,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL
+from PIL import Image
 import pickle
 import constants as c
 from sklearn.preprocessing import StandardScaler
@@ -40,8 +40,11 @@ def check_balance(dict, labels):
 centered around the mean pixel value and normalized pixel values between 0-1 
 0 and 1'''
 def preprocess_image(image):
+    # convert image to greyscale and np array
+    img = np.asarray(Image.open(image).convert('L'))
+
     #gaussian blur and sharpen edges then flatten image
-    img = np.array(process_image(image))
+    img = process_image(img)
     x, y = img.shape
     img = np.ravel(img)
 
