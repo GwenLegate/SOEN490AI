@@ -51,7 +51,6 @@ class Net(nn.Module):
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
 
-
 '''testing'''
 alphabet_cnn = Net()
 alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/alphabet_model.pt", map_location=device))
@@ -60,6 +59,13 @@ alphabet_cnn.to('cpu') # puts model on cpu
 
 alpha_key = {0:"A", 1:"B", 2:"C", 3:"D", 4:"E", 5:"F", 6:"G", 7:"H", 8:"I", 9:"J", 10:"K", 11:"L", 12:"M", 13:"N",
              14:"O", 15:"P", 16:"Q", 17:"R", 18:"S", 19:"T", 20:"U", 21:"V", 22:"W", 23:"X", 24:"Y", 25:"Z"}
+
+# checks if two models have equal weights
+def check_equal(model1, model2):
+    for p1, p2 in zip(model1.parameters(), model2.parameters()):
+        if p1.data.ne(p2.data).sum() > 0:
+            return False
+    return True
 
 ''' returns predictions from the model.  The default type 1 will return the predicted letter, type 2 will return a 
 one-hot-vector prediction for the inputs that can be used for comparison with the labels'''
