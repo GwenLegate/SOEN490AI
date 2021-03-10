@@ -112,7 +112,7 @@ print(sklearn.metrics.confusion_matrix(y1, y2))
 
 
 ''' predict one real image'''
-test_img = preprocess_image(c.GWEN_W)
+test_img = preprocess_image(c.GWEN_P)
 #print(test_img)
 '''x = get_training_arr('x.npy')
 test_img = x[0]
@@ -125,4 +125,5 @@ plt.show()'''
 res, vect = predict_az(test_img)
 print(res)
 print(vect)
+
 

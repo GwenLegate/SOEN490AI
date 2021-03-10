@@ -13,10 +13,10 @@ import utilities.data_processing as data
 import constants as c
 
 # Flags to control execution
-TRAIN = True
-CONTINUE_TRAINING = True
-LOAD = True
-FREEZE_LAYERS = 0
+TRAIN = False
+CONTINUE_TRAINING = False
+LOAD = False
+FREEZE_LAYERS = 3
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -28,7 +28,7 @@ else:
 
 # Define hyper parameters
 LEARNING_RATE = 0.001
-EPOCHS = 15
+EPOCHS = 40
 
 BATCH_SIZE = 50
 
@@ -38,22 +38,21 @@ MODEL_NAME = f"alpha_model-{int(time.time())}" # make logfile (time.time() gives
 sign_totals = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0, 14:0, 15:0, 16:0, 17:0, 18:0,
                19:0, 20:0, 21:0, 22:0, 23:0, 24:0, 25:0}
 
-gc.collect()
 # load training and testing data and put them into torch tensors
 if LOAD:
-
-    '''alpha_X_validate = data.get_training_arr("alpha_validate_features.npy")
-    alpha_y_validate = data.get_training_arr('alpha_validate_labels.npy')
-    alpha_X = data.get_training_arr('alpha_train_features_shuffled.npy')
-    alpha_y = data.get_training_arr('alpha_train_labels_shuffled.npy')'''
+    gc.collect()
+    alpha_X_validate = data.get_training_arr("alpha_validate_features_no_noise.npy")
+    alpha_y_validate = data.get_training_arr('alpha_validate_labels_no_noise.npy')
+    alpha_X = data.get_training_arr('alpha_train_features_noisy_shuffled.npy')
+    alpha_y = data.get_training_arr('alpha_train_labels_noisy_shuffled.npy')
 
     #use this config to do a hyperparameter search
-    alpha_X = data.get_training_arr("alpha_validate_features_noise.npy")
-    alpha_y = data.get_training_arr('alpha_validate_labels_noise.npy')
+    '''alpha_X = data.get_training_arr("alpha_validate_features_combined.npy")
+    alpha_y = data.get_training_arr('alpha_validate_labels_combined.npy')
     alpha_X_validate = alpha_X[:150, :, :]
     alpha_y_validate = alpha_y[:150, :]
     alpha_X = alpha_X[150:, :, :]
-    alpha_y = alpha_y[150:, :]
+    alpha_y = alpha_y[150:, :]'''
 
     print(alpha_X.shape, alpha_y.shape)
     print(alpha_X_validate.shape, alpha_y_validate.shape)
@@ -163,7 +162,7 @@ def train():
         for epoch in range(EPOCHS):
             print(epoch)
 
-            if epoch == 20 or epoch == 40 or epoch == 60:
+            if epoch == 10 or epoch == 20 or epoch == 30:
                 # save progress periodically in case we run out of time on the gpu
                 torch.save(alphabet_cnn.state_dict(), c.MODEL_SAVE_PATH + "/alphabet_model.pt")
             for i in range(0, len(alpha_X), BATCH_SIZE):
