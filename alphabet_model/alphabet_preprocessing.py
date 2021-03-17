@@ -1,12 +1,10 @@
 import sys, os, gc
 import numpy as np
-import random
-import copy
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from image_processing.noise_processing_tool import apply_noise
-from utilities.data_processing import get_training_arr, preprocess_image, one_hot_vector, shuffle_set
+from utilities.data_processing import get_training_arr, preprocess_image, one_hot_vector, shuffle_set, swap
 import constants as c
 
 ''' takes an input array "letters", containing the directories to be processed and a string fname to save the output under'''
@@ -100,17 +98,3 @@ def create_alphabet_test_labels():
     alpha_test_y = one_hot_vector(alpha_test_y, num_classes=26)
     np.save('alpha_test_labels.npy', alpha_test_y)
 
-'''Adding noise to the images over such a large dataset caused memory problems (too large for RAM).  This methon does an
-inplace swap of two seperate datasets so that samples are adequately shuffled before use.'''
-def swap(feat_X1, label_y1, feat_X2, label_y2):
-    arr_len, _ = label_y1.shape
-    rand_len = int(arr_len / 2)
-    rand = random.sample(range(arr_len), rand_len)
-    for i in rand:
-        lab_temp = copy.deepcopy(label_y1[i, :])
-        feat_temp = copy.deepcopy(feat_X1[i, :, :])
-        label_y1[i, :] = label_y2[i, :]
-        feat_X1[i, :, :] = feat_X2[i, :, :]
-        label_y2[i, :] = lab_temp
-        feat_X2[i, :, :] = feat_temp
-    return feat_X1, label_y1, feat_X2, label_y2

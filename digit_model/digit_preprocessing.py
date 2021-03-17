@@ -1,21 +1,24 @@
 import sys, os
 import numpy as np
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-from utilities.data_processing import preprocess_image, get_training_arr, one_hot_vector, numeric_class
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from utilities.data_processing import preprocess_image, get_training_arr, one_hot_vector, shuffle_set, swap
 import constants as c
 from image_processing.noise_processing_tool import apply_noise
 
 ''' takes an input array "digits", containing the directories to be processed and a string fname to save the output under'''
-def preprocess_training_images(digits, fname):
+def preprocess_training_images(digits, fname, noise=False):
     # preprocess images and add them to the input feature array
     digits_X = get_training_arr(fname)
     for digit in digits:
         for root, dirs, files in os.walk(c.TRAIN_DIGIT_IMGS_BASEDIR+digit):
             for name in files:
                 print(name)
-                px = apply_noise(os.path.join(root, name))
-                px = preprocess_image(px)
+                if noise:
+                    px = apply_noise(os.path.join(root, name))
+                    px = preprocess_image(px)
+                else:
+                    px = preprocess_image(os.path.join(root, name))
                 row, col, = px.shape
 
                 if row == 200 and col == 200:
@@ -56,20 +59,7 @@ def create_digit_labels():
     print(digits_y.shape)
     np.save('digit_labels.npy', digits_y)
 
-''' shuffles and splits set before use. num samples is the number of images processed'''
-def shuffle_train_set(train_X, train_y, classes, num_samples):
-    train_X = train_X.reshape(num_samples, -1)
-    train_y = numeric_class(train_y).reshape(-1, 1)
-    xy = np.hstack((train_X, train_y))
-    np.random.shuffle(xy)
-    train_X, train_y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
-    train_y = one_hot_vector(train_y.astype(int), num_classes=classes)
-    return train_X, train_y
 
-preprocess_training_images(['3'], '3.npy')
-preprocess_training_images(['4'], '4.npy')
-preprocess_training_images(['5'], '5.npy')
-preprocess_training_images(['6'], '6.npy')
-preprocess_training_images(['7'], '7.npy')
-preprocess_training_images(['8'], '8.npy')
-preprocess_training_images(['9'], '9.npy')
+
+
+
