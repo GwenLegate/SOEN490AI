@@ -1,28 +1,10 @@
 ''' Import statements '''
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import PIL
-import pickle
-import constants as c
-from sklearn.preprocessing import StandardScaler
+from PIL import Image
 from image_processing.angels_image_processing_tool import process_image
-
-
-'''returns a usable format of the input data.  Input (str): path to fil to be loaded, type (str): type of file input'''
-def get_data(path, type='npy'):
-    if type == 'csv':
-        return pd.read_csv(path).to_numpy()
-    if type == 'npy':
-        try:
-            np.load(path, allow_pickle=True)
-        except FileNotFoundError:
-            return np.empty((0, 200, 200))
-        else:
-            return np.load(path, allow_pickle=True)
-    else:
-        print('type must be \'csv\' or \'npy\'')
-
+import random
+import copy
 
 ''' checks the dataset is balanced, prints out the input dictionary updated with the total amount of each class
 in the training set.
@@ -40,8 +22,15 @@ def check_balance(dict, labels):
 centered around the mean pixel value and normalized pixel values between 0-1 
 0 and 1'''
 def preprocess_image(image):
+    # convert image to greyscale and np array
+    try:
+        img = np.asarray(Image.open(image).convert('L'))
+    except AttributeError:
+        img = Image.fromarray(image)
+        img = np.asarray(img.convert('L'))
+
     #gaussian blur and sharpen edges then flatten image
-    img = np.array(process_image(image))
+    img = process_image(img)
     x, y = img.shape
     img = np.ravel(img)
 
@@ -77,12 +66,35 @@ def get_training_arr(file):
     try:
         np.load(file, allow_pickle=True)
     except FileNotFoundError:
-        if "digit" in file:
-            return np.empty((0, 100, 100))
-        else:
-            return np.empty((0, 200, 200))
+        return np.empty((0, 200, 200))
     else:
         return np.load(file, allow_pickle=True)
 
+''' shuffles dataset before use.  Classes is the number of outcomes possible in the classification of the set and 
+num_samples is the number of images in the set'''
+
+def shuffle_set(X, y, classes, num_samples):
+    X = X.reshape(num_samples, -1)
+    y = numeric_class(y).reshape(-1, 1)
+    xy = np.hstack((X, y))
+    np.random.shuffle(xy)
+    X, y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
+    y = one_hot_vector(y.astype(int), num_classes=classes)
+    return X, y
+
+'''Adding noise to the images over such a large dataset caused memory problems (too large for RAM).  This methon does an
+inplace swap of two seperate datasets so that samples are adequately shuffled before use.'''
+def swap(feat_X1, label_y1, feat_X2, label_y2):
+    arr_len, _ = label_y1.shape
+    rand_len = int(arr_len / 2)
+    rand = random.sample(range(arr_len), rand_len)
+    for i in rand:
+        lab_temp = copy.deepcopy(label_y1[i, :])
+        feat_temp = copy.deepcopy(feat_X1[i, :, :])
+        label_y1[i, :] = label_y2[i, :]
+        feat_X1[i, :, :] = feat_X2[i, :, :]
+        label_y2[i, :] = lab_temp
+        feat_X2[i, :, :] = feat_temp
+    return feat_X1, label_y1, feat_X2, label_y2
 
 

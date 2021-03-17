@@ -12,13 +12,13 @@ TRAIN_DIGIT_IMGS_BASEDIR = os.path.dirname(os.path.dirname(os.path.realpath(__fi
 MODEL_SAVE_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/trained_models"
 ACTIVATION_LYR_1 = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
-                     "/SOEN490AI/digit_model/visualize_activation1.npy"
+                     "/SOEN490AI/alphabet_model/visualize_activation1.npy"
 ACTIVATION_LYR_2 = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
-                     "/SOEN490AI/digit_model/visualize_activation2.npy"
+                     "/SOEN490AI/alphabet_model/visualize_activation2.npy"
 GWEN_B = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_b.png"
 GWEN_H = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
-                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_h.png"
+                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_h1.png"
 GWEN_Y = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_y.jpg"
 GWEN_W = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
@@ -46,4 +46,8 @@ GWEN_A_NO_NOISE = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) +
 GWEN1 = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
                      "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen1.jpg"
 GWEN6 = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
-                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen1.jpg"
+                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen6.jpg"
+MARC_H = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
+                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/marc_h.png"
+GWEN_P = os.path.dirname(os.path.dirname(os.path.realpath(__file__))) + \
+                     "/SOEN490AI/datasets/asl_alphabet/gwen_test/gwen_p.png"

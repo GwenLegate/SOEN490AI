@@ -1,15 +1,14 @@
-import sys, os
+import sys, os, gc
 import numpy as np
-import pickle
 import matplotlib.pyplot as plt
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from image_processing.noise_processing_tool import apply_noise
-from utilities.data_processing import get_training_arr, preprocess_image, get_data, one_hot_vector, numeric_class
+from utilities.data_processing import get_training_arr, preprocess_image, one_hot_vector, shuffle_set, swap
 import constants as c
 
 ''' takes an input array "letters", containing the directories to be processed and a string fname to save the output under'''
-def preprocess_training_images(letters, fname):
+def preprocess_training_images(letters, fname, noise = False):
     # preprocess images and add them to the input feature array
     alpha_X = get_training_arr(fname)
     print(alpha_X.shape)
@@ -17,15 +16,18 @@ def preprocess_training_images(letters, fname):
         for root, dirs, files in os.walk(c.TRAIN_ALPHABET_IMGS_BASEDIR+letter):
             for name in files:
                 print(name)
-                px = apply_noise(os.path.join(root, name))
-                px = preprocess_image(px)
+                if noise:
+                    px = apply_noise(os.path.join(root, name))
+                    px = preprocess_image(px)
+                else:
+                    px = preprocess_image(os.path.join(root, name))
+
                 row, col, = px.shape
 
                 if row == 200 and col == 200:
                     px = px.reshape(-1, 200, 200)
                     alpha_X = np.append(alpha_X, px, axis=0)
                 else:
-
                     # pad image
                     add_r = 200 - row
                     add_c = 200 - col
@@ -39,10 +41,9 @@ def preprocess_training_images(letters, fname):
             np.save(fname, alpha_X.reshape(-1, 200, 200))
         print(alpha_X.shape)
 
-''' preprocesses images from the training set'''
+''' preprocesses images from the testining set'''
 def preprocess_testing_images():
     alpha_test_X = np.empty((0, 200, 200))
-    #num = 0
     for root, dirs, files in os.walk(c.TEST_ALPHABET_IMGS_BASEDIR):
         for name in files:
             print(name)
@@ -53,7 +54,6 @@ def preprocess_testing_images():
                 px = px.reshape(-1, 200, 200)
                 alpha_test_X = np.append(alpha_test_X, px, axis=0)
             else:
-
                 # pad image
                 add_r = 200 - row
                 add_c = 200 - col
@@ -65,7 +65,8 @@ def preprocess_testing_images():
                 alpha_test_X = np.append(alpha_test_X, px, axis=0)
     np.save('alpha_test_inputs.npy', alpha_test_X)
 
-'''creates and saves label array in one hot vector format.  All letters have 3000 instances except J and Z which have 0.'''
+'''creates and saves label array in one hot vector format.  All letters have 3000 instances except J and Z which have 0
+and T which has 2114.'''
 def create_alphabet_train_labels():
     alpha_y = np.zeros(3000, dtype=int)
     for i in range(1, 25):
@@ -97,22 +98,3 @@ def create_alphabet_test_labels():
     alpha_test_y = one_hot_vector(alpha_test_y, num_classes=26)
     np.save('alpha_test_labels.npy', alpha_test_y)
 
-''' shuffles test set before use'''
-def shuffle_test_set(test_X, test_y, classes):
-    test_X = test_X.reshape(720, -1)
-    test_y = numeric_class(test_y).reshape(-1, 1)
-    xy = np.hstack((test_X, test_y))
-    np.random.shuffle(xy)
-    test_X, test_y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
-    test_y = one_hot_vector(test_y.astype(int), num_classes=classes)
-    return test_X, test_y
-
-
-def shuffle_train_set(train_X, train_y, classes, num_samples):
-    train_X = train_X.reshape(num_samples, -1)
-    train_y = numeric_class(train_y).reshape(-1, 1)
-    xy = np.hstack((train_X, train_y))
-    np.random.shuffle(xy)
-    train_X, train_y = xy[:, :40000].reshape(-1, 200, 200), xy[:, -1]
-    train_y = one_hot_vector(train_y.astype(int), num_classes=classes)
-    return train_X, train_y

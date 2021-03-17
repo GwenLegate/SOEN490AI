@@ -2,20 +2,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchsummary import summary
 import numpy as np
 import time
 import sys
 import os
+import gc
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 import utilities.data_processing as data
 import constants as c
 
 # Flags to control execution
-TRAIN = True
+TRAIN = False
 CONTINUE_TRAINING = False
-LOAD = True
+LOAD = False
+FREEZE_LAYERS = 3
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -27,7 +28,7 @@ else:
 
 # Define hyper parameters
 LEARNING_RATE = 0.001
-EPOCHS = 25
+EPOCHS = 40
 
 BATCH_SIZE = 50
 
@@ -39,15 +40,19 @@ sign_totals = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:
 
 # load training and testing data and put them into torch tensors
 if LOAD:
-    data_X = data.get_training_arr("alpha_train_features_shuffled.npy")
-    data_y = data.get_training_arr('alpha_train_labels_shuffled.npy')
-
-    '''alpha_X_validate, alpha_X, hold_X = data_X[3520:10667, :], data_X[10667:, :], data_X[:3520, :]
-    alpha_y_validate, alpha_y, hold_y = data_y[3520:10667, :], data_y[10667:, :], data_y[:3520, :]'''
+    gc.collect()
+    alpha_X_validate = data.get_training_arr("alpha_validate_features_no_noise.npy")
+    alpha_y_validate = data.get_training_arr('alpha_validate_labels_no_noise.npy')
+    alpha_X = data.get_training_arr('alpha_train_features_noisy_shuffled.npy')
+    alpha_y = data.get_training_arr('alpha_train_labels_noisy_shuffled.npy')
 
     #use this config to do a hyperparameter search
-    alpha_X, alpha_X_validate  = data_X[150:10667, :], data_X[:150, :]
-    alpha_y, alpha_y_validate = data_y[150:10667, :], data_y[:150, :]
+    '''alpha_X = data.get_training_arr("alpha_validate_features_combined.npy")
+    alpha_y = data.get_training_arr('alpha_validate_labels_combined.npy')
+    alpha_X_validate = alpha_X[:150, :, :]
+    alpha_y_validate = alpha_y[:150, :]
+    alpha_X = alpha_X[150:, :, :]
+    alpha_y = alpha_y[150:, :]'''
 
     print(alpha_X.shape, alpha_y.shape)
     print(alpha_X_validate.shape, alpha_y_validate.shape)
@@ -68,7 +73,6 @@ class Net(nn.Module):
         self.conv4 = nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2)
         self.conv5 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=2)
         self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
-
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
@@ -91,7 +95,6 @@ class Net(nn.Module):
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
         x = F.relu(F.max_pool2d(self.conv6(x), 2))
-
 
         x = F.relu(self.avgpool(x))
 
@@ -127,7 +130,15 @@ alphabet_cnn = Net().to(device)
 # load current model if you want to continue to build off it
 if CONTINUE_TRAINING:
     print("previous model loaded")
-    alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/alphabet_model.pt", map_location=device))
+    #alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/alphabet_model.pt", map_location=device))
+    alphabet_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/base_alphabet_model.pt", map_location=device))
+    lyr = 0
+    for child in alphabet_cnn.children():
+        lyr += 1
+        # freezes layers 1: FREEZE_LAYERS in the model
+        if lyr <= FREEZE_LAYERS:
+            for param in child.parameters():
+                param.requires_grad = False
 
 optimizer = optim.Adam(alphabet_cnn.parameters(), lr=LEARNING_RATE)
 loss_fn = nn.CrossEntropyLoss()
@@ -151,7 +162,7 @@ def train():
         for epoch in range(EPOCHS):
             print(epoch)
 
-            if epoch == 25 or epoch == 50 or epoch == 75:
+            if epoch == 10 or epoch == 20 or epoch == 30:
                 # save progress periodically in case we run out of time on the gpu
                 torch.save(alphabet_cnn.state_dict(), c.MODEL_SAVE_PATH + "/alphabet_model.pt")
             for i in range(0, len(alpha_X), BATCH_SIZE):
@@ -169,3 +180,4 @@ def train():
 if(TRAIN):
     train()
     torch.save(alphabet_cnn.state_dict(), c.MODEL_SAVE_PATH+"/alphabet_model.pt")
+    #torch.save(alphabet_cnn.state_dict(), c.MODEL_SAVE_PATH + "/base_alphabet_model.pt")
