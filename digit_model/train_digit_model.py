@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchsummary import summary
 import numpy as np
 import time
 import sys
@@ -14,8 +13,9 @@ import constants as c
 
 # Flags to control execution
 TRAIN = True
-CONTINUE_TRAINING = False
+CONTINUE_TRAINING = True
 LOAD = True
+FREEZE_LAYERS = 0
 
 # Check for GPU, if no GPU, use CPU
 if torch.cuda.is_available():
@@ -27,23 +27,23 @@ else:
 
 # Define hyper parameters
 LEARNING_RATE = 0.001
-EPOCHS = 50
+EPOCHS = 20
 BATCH_SIZE = 50
 
 # input parameters
-MODEL_NAME = f"digit_model-{int(time.time())}"
+MODEL_NAME = f"digit_base_model-{int(time.time())}"
 
 if LOAD:
     # load, training and testing data into torch tensors
-    data_X = data.get_training_arr("digit_features_shuffled.npy")
-    data_y = data.get_training_arr('digit_labels_shuffled.npy')
+    data_X = data.get_training_arr("digit_features_shuffled_noisy.npy")
+    data_y = data.get_training_arr('digit_labels_shuffled_noisy.npy')
 
-    digit_X_validate, digit_X, digit_X_test = data_X[1000:8411, :], data_X[8411:, :], data_X[:1000, :]
-    digit_y_validate, digit_y, digit_y_test = data_y[1000:8411, :], data_y[8411:, :], data_y[:1000, :]
+    '''digit_X_validate, digit_X, digit_X_test = data_X[841:4206, :, :], data_X[4206:, :, :], data_X[:841, :, :]
+    digit_y_validate, digit_y, digit_y_test = data_y[841:4206, :], data_y[4206:, :], data_y[:841, :]'''
 
     # use this config to do a hyperparameter search
-    #digit_X, digit_X_validate  = data_X[1000:8411, :], data_X[:1000, :]
-    #digit_y, digit_y_validate = data_y[1000:8411, :], data_y[:1000, :]
+    digit_X, digit_X_validate  = data_X[841:4206, :, :], data_X[:841, :, :]
+    digit_y, digit_y_validate = data_y[841:4206, :], data_y[:841, :]
 
     print(digit_X_validate.shape, digit_y_validate.shape)
     print(digit_X.shape, digit_y.shape)
@@ -98,7 +98,14 @@ digit_cnn = Net().to(device)
 # load current model if you want to continue to build off it
 if CONTINUE_TRAINING:
     print("previous model loaded")
-    digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/digit_model.pt", map_location=device))
+    digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/base_digit_model.pt", map_location=device))
+    lyr = 0
+    for child in digit_cnn.children():
+        lyr += 1
+        # freezes layers 1: FREEZE_LAYERS in the model
+        if lyr <= FREEZE_LAYERS:
+            for param in child.parameters():
+                param.requires_grad = False
 
 # use Adam optimization and cross entropy loss
 optimizer = optim.Adam(digit_cnn.parameters(), lr=LEARNING_RATE)
@@ -147,7 +154,7 @@ def train():
         for epoch in range(EPOCHS):
             print(epoch)
 
-            if epoch == 15 or epoch == 30:
+            if epoch == 20 or epoch == 40:
                 # save progress periodically in case we run out of time on the gpu
                 torch.save(digit_cnn.state_dict(), c.MODEL_SAVE_PATH + "/digit_model.pt")
             for i in range(0, len(digit_train_X), BATCH_SIZE):
@@ -163,4 +170,4 @@ def train():
 # set TRAIN=True to train model, learned weights are serialized and saved to the 'trained_models' directory
 if(TRAIN):
     train()
-    torch.save(digit_cnn.state_dict(), c.MODEL_SAVE_PATH+"/digit_model.pt")
+    torch.save(digit_cnn.state_dict(), c.MODEL_SAVE_PATH+"/base_digit_model.pt")
