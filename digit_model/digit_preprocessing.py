@@ -62,4 +62,3 @@ def create_digit_labels():
 
 
 
-

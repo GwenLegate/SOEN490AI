@@ -7,6 +7,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from utilities.data_processing import *
+import constants as c
 
 ''' check for GPU, if no GPU, use CPU '''
 if torch.cuda.is_available():
@@ -50,7 +51,7 @@ class Net(nn.Module):
 
 '''testing'''
 digit_cnn = Net()
-digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/digit_model.pt", map_location=device))
+digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/base_digit_model.pt", map_location=device))
 digit_cnn.cuda()
 digit_cnn.to('cpu') # puts model on cpu
 
@@ -73,12 +74,36 @@ def predict_az(input, type=1):
     if type == 2:
         return predict_vect
 
-''' load testing X and y'''
-'''data_X = get_training_arr('digit_features_shuffled.npy')
-data_y = get_training_arr('digit_labels_shuffled.npy')
+def test_images_digit():
+    digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    confusion = np.zeros((10, 10), dtype=int)
+    for digit in digits:
+        print('testing ' + digit)
+        for root, dirs, files in os.walk(c.TEAM_DIGIT_IMGS_BASEDIR + digit):
+            for name in files:
+                px = preprocess_image(os.path.join(root, name))
+                predict = predict_az(px)
+                num = confusion[predict, int(digit)] + 1
+                confusion[predict, int(digit)] = num
+    # accuracy and percision calcs
+    num_correct = 0
+    precision = np.zeros(10)
+    for i in range(10):
+        num_correct += confusion[i, i]
+        precision[i] = confusion[i,i] / np.sum(confusion, axis=1)[i]
+    accuracy = num_correct / np.sum(confusion)
+    precision = np.mean(precision)
+    print('accuracy: ' + str(accuracy))
+    print('precision: ' + str(precision))
+    print(confusion)
 
-digit_X_test = data_X[:1000, :]
-alpha_y_test = data_y[:1000, :]
+test_images_digit()
+''' load testing X and y'''
+'''data_X = get_training_arr('digit_features_shuffled_no_noise.npy')
+data_y = get_training_arr('digit_labels_shuffled_no_noise.npy')
+
+digit_X_test = data_X[:841, :, :]
+alpha_y_test = data_y[:841, :]
 
 alpha_predict_y = predict_az(digit_X_test.reshape(-1, 200, 200), type=2)
 #print(alpha_predict_y)
@@ -92,17 +117,4 @@ print(sklearn.metrics.recall_score(y1, y2, average='macro'))
 print(sklearn.metrics.confusion_matrix(y1, y2))'''
 
 
-''' predict one real image'''
-test_img = preprocess_image(c.GWEN5)
-#print(test_img)
-'''x = get_training_arr('x.npy')
-test_img = x[0]
-test_img = preprocess_image(test_img)'''
-
-'''plt.imshow((test_img * 255), cmap='gray')
-plt.show()'''
-
-
-result = predict_az(test_img)
-print(result)
 
