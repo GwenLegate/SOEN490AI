@@ -90,7 +90,10 @@ def test_images_digit():
     precision = np.zeros(10)
     for i in range(10):
         num_correct += confusion[i, i]
-        precision[i] = confusion[i,i] / np.sum(confusion, axis=1)[i]
+        if np.sum(confusion, axis=1)[i] == 0:
+            precision[i] = 0
+        else:
+            precision[i] = confusion[i,i] / np.sum(confusion, axis=1)[i]
     accuracy = num_correct / np.sum(confusion)
     precision = np.mean(precision)
     print('accuracy: ' + str(accuracy))
