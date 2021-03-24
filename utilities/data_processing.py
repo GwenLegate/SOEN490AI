@@ -22,7 +22,13 @@ def check_balance(dict, labels):
 centered around the mean pixel value and normalized pixel values between 0-1 
 0 and 1'''
 def preprocess_image(image):
-    _, _, color = np.asarray(Image.open(image)).shape
+    try:
+        _, _, color = np.asarray(Image.open(image)).shape
+    except AttributeError:
+        try:
+            _, _, color = image.shape
+        except ValueError:
+            color = 1
     # convert image to greyscale and np array
     try:
         if color == 3 or color == 4:
