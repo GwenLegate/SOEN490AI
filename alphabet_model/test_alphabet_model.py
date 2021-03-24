@@ -86,6 +86,32 @@ def predict_az(input, type=1):
     if type == 2:
         return predict_vect
 
+def test_images_alphabet():
+    letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y']
+    confusion = np.zeros((24, 24), dtype=int)
+    for letter in letters:
+        print('testing ' + letter)
+        for root, dirs, files in os.walk(c.TEAM_ALPHABET_IMGS_BASEDIR + letter):
+            for name in files:
+                px = preprocess_image(os.path.join(root, name))
+                predict, _ = predict_az(px)
+                num = confusion[letters.index(predict), letters.index(letter)] + 1
+                confusion[letters.index(predict), letters.index(letter)] = num
+    # accuracy and percision calcs
+    num_correct = 0
+    precision = np.zeros(24)
+    for i in range(24):
+        num_correct += confusion[i, i]
+        if np.sum(confusion, axis=1)[i] == 0:
+            precision[i] = 0
+        else:
+            precision[i] = confusion[i,i] / np.sum(confusion, axis=1)[i]
+    accuracy = num_correct / np.sum(confusion)
+    precision = np.mean(precision)
+    print('accuracy: ' + str(accuracy))
+    print('precision: ' + str(precision))
+    print(confusion)
+
 ''' load testing X and y'''
 SET = 0
 
@@ -99,7 +125,7 @@ else:
     alpha_X_test = get_training_arr('alpha_test_inputs.npy')
     alpha_y_test = get_training_arr('alphabet_test_labels.npy')
 
-alpha_predict_y = predict_az(alpha_X_test.reshape(-1, 200, 200), type=2)
+'''alpha_predict_y = predict_az(alpha_X_test.reshape(-1, 200, 200), type=2)
 #print(alpha_predict_y)
 
 y1 = numeric_class(alpha_y_test)
@@ -108,11 +134,11 @@ y2 = numeric_class(alpha_predict_y)
 print(sklearn.metrics.accuracy_score(y1, y2))
 print(sklearn.metrics.precision_score(y1, y2, average='macro'))
 print(sklearn.metrics.recall_score(y1, y2, average='macro'))
-print(sklearn.metrics.confusion_matrix(y1, y2))
+print(sklearn.metrics.confusion_matrix(y1, y2))'''
 
 
 ''' predict one real image'''
-test_img = preprocess_image(c.GWEN_P)
+# test_img = preprocess_image(c.GWEN_P)
 #print(test_img)
 '''x = get_training_arr('x.npy')
 test_img = x[0]
@@ -122,8 +148,8 @@ test_img = preprocess_image(test_img)'''
 plt.show()'''
 
 
-res, vect = predict_az(test_img)
-print(res)
-print(vect)
+#res, vect = predict_az(test_img)
+#print(res)
+#print(vect)
 
-
+test_images_alphabet()

@@ -1,5 +1,6 @@
 import sys, os
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from utilities.data_processing import preprocess_image, get_training_arr, one_hot_vector, shuffle_set, swap
@@ -58,6 +59,7 @@ def create_digit_labels():
     digits_y = one_hot_vector(digits_y, num_classes=10)
     print(digits_y.shape)
     np.save('digit_labels.npy', digits_y)
+
 
 
 

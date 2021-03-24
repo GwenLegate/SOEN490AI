@@ -51,7 +51,7 @@ class Net(nn.Module):
 
 '''testing'''
 digit_cnn = Net()
-digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/base_digit_model.pt", map_location=device))
+digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/digit_model.pt", map_location=device))
 digit_cnn.cuda()
 digit_cnn.to('cpu') # puts model on cpu
 
