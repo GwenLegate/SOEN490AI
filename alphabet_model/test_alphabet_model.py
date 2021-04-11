@@ -7,7 +7,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from utilities.evaluation_metrics import *
+import constants as c
 from utilities.data_processing import *
 
 ''' check for GPU, if no GPU, use CPU '''
@@ -138,23 +138,22 @@ def test_real_image(img_path):
 # Select testing regime.
 # SET = 1 corresponds to the noiseless dataset
 # SET = 2 corresponds to testing with team dataset (takes a long time to test b/c the images are all different sizes)
-# SET = any other number corresponds to the default option of the noisy set obtained online
+# SET = 0 corresponds to the default option of the noisy set obtained online
 SET = 1
 
 if SET == 1:
-    data_X = get_training_arr('alpha_train_features_no_noise_shuffled.npy')
-    data_y = get_training_arr('alpha_train_labels_no_noise_shuffled.npy')
-
-    alpha_X_test = data_X[:100, :]
-    alpha_y_test = data_y[:100, :]
+    alpha_X_test = get_training_arr('alpha_validate_features_no_noise.npy')[:1000, :, :]
+    alpha_y_test = get_training_arr('alpha_validate_labels_no_noise.npy')[:1000, :]
+    print(alpha_X_test.shape, alpha_y_test.shape)
 
     test(alpha_X_test, alpha_y_test)
 
-if SET == 2:
+elif SET == 2:
     test_images_alphabet()
 
 else:
     alpha_X_test = get_training_arr('alpha_test_inputs.npy')
     alpha_y_test = get_training_arr('alphabet_test_labels.npy')
+    print(alpha_X_test.shape, alpha_y_test.shape)
 
     test(alpha_X_test, alpha_y_test)
