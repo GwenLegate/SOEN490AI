@@ -18,16 +18,16 @@ else:
     print("Running on the CPU")
 device = torch.device("cpu")
 
-# alphabet model
+# digit model
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
-        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=2)
-        self.conv3 = nn.Conv2d(24, 32, kernel_size=3, stride=1, padding=2)
-        self.conv4 = nn.Conv2d(32, 32, kernel_size=5, stride=1, padding=2)
-        self.conv5 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
-        self.conv6 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=2)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=3)
+        self.conv3 = nn.Conv2d(24, 24, kernel_size=3, stride=1, padding=2)
+        self.conv4 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
+        self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
@@ -35,7 +35,17 @@ class Net(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
+        x = x.cpu()
+        x = x.detach().numpy()
+        np.save('visualize_activation1.npy', x)
+        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
+
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
+        x = x.cpu()
+        x = x.detach().numpy()
+        np.save('visualize_activation2.npy', x)
+        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
+
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
@@ -48,12 +58,6 @@ class Net(nn.Module):
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
-
-'''testing'''
-digit_cnn = Net()
-digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/digit_model.pt", map_location=device))
-digit_cnn.cuda()
-digit_cnn.to('cpu') # puts model on cpu
 
 ''' returns predictions from the model.  The default type 1 will return the predicted letter, type 2 will return a 
 one-hot-vector prediction for the inputs that can be used for comparison with the labels'''
@@ -83,8 +87,8 @@ def test_images_digit():
             for name in files:
                 px = preprocess_image(os.path.join(root, name))
                 predict = predict_az(px)
-                num = confusion[predict, int(digit)] + 1
-                confusion[predict, int(digit)] = num
+                num = confusion[int(digit), predict] + 1
+                confusion[int(digit), predict] = num
     # accuracy and percision calcs
     num_correct = 0
     precision = np.zeros(10)
@@ -100,13 +104,21 @@ def test_images_digit():
     print('precision: ' + str(precision))
     print(confusion)
 
-test_images_digit()
-''' load testing X and y'''
-'''data_X = get_training_arr('digit_features_shuffled_no_noise.npy')
-data_y = get_training_arr('digit_labels_shuffled_no_noise.npy')
+'''testing'''
+digit_cnn = Net()
+digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/digit_model.pt", map_location=device))
+digit_cnn.cuda()
+digit_cnn.to('cpu') # puts model on cpu
 
-digit_X_test = data_X[:841, :, :]
-alpha_y_test = data_y[:841, :]
+# test using team noisy image dataset
+test_images_digit()
+
+''' load testing X and y to test on noisless dataset'''
+data_X = get_training_arr("digit_features_combined_shuffled1.npy")
+data_y = get_training_arr('digit_labels_combined_shuffled1.npy')
+
+digit_X_test = data_X[:1000, :, :]
+alpha_y_test = data_y[:1000, :]
 
 alpha_predict_y = predict_az(digit_X_test.reshape(-1, 200, 200), type=2)
 #print(alpha_predict_y)
@@ -117,7 +129,7 @@ y2 = numeric_class(alpha_predict_y)
 print(sklearn.metrics.accuracy_score(y1, y2))
 print(sklearn.metrics.precision_score(y1, y2, average='macro'))
 print(sklearn.metrics.recall_score(y1, y2, average='macro'))
-print(sklearn.metrics.confusion_matrix(y1, y2))'''
+print(sklearn.metrics.confusion_matrix(y1, y2))
 
 
 

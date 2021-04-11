@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, gc
 import numpy as np
 import matplotlib.pyplot as plt
 
