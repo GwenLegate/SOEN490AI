@@ -24,10 +24,10 @@ class Net(nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
         self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=3)
-        self.conv3 = nn.Conv2d(24, 24, kernel_size=3, stride=1, padding=2)
-        self.conv4 = nn.Conv2d(24, 32, kernel_size=5, stride=1, padding=2)
-        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=2)
-        self.conv6 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
+        self.conv3 = nn.Conv2d(24, 32, kernel_size=3, stride=1, padding=2)
+        self.conv4 = nn.Conv2d(32, 32, kernel_size=5, stride=1, padding=2)
+        self.conv5 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
+        self.conv6 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d(3)
         self.fc1 = nn.Linear(64*3*3, 512) # flattens cnn output
@@ -111,11 +111,12 @@ digit_cnn.cuda()
 digit_cnn.to('cpu') # puts model on cpu
 
 # test using team noisy image dataset
-test_images_digit()
+#test_images_digit()
 
 ''' load testing X and y to test on noisless dataset'''
-data_X = get_training_arr("digit_features_combined_shuffled1.npy")
-data_y = get_training_arr('digit_labels_combined_shuffled1.npy')
+data_X = get_training_arr("digit_features_shuffled_no_noise.npy")
+data_y = get_training_arr('digit_labels_shuffled_no_noise.npy')
+print(data_y.shape, data_X.shape)
 
 digit_X_test = data_X[:1000, :, :]
 alpha_y_test = data_y[:1000, :]
