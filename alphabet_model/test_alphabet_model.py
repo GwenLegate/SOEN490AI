@@ -7,7 +7,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from utilities.evaluation_metrics import *
+import constants as c
 from utilities.data_processing import *
 
 ''' check for GPU, if no GPU, use CPU '''
@@ -86,44 +86,74 @@ def predict_az(input, type=1):
     if type == 2:
         return predict_vect
 
-''' load testing X and y'''
-SET = 0
+# use this method to test the images from the team dataset since each image is a different size and needs to be loaded,
+# processed and predicted individually
+def test_images_alphabet():
+    letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y']
+    confusion = np.zeros((24, 24), dtype=int)
+    for letter in letters:
+        print('testing ' + letter)
+        for root, dirs, files in os.walk(c.TEAM_ALPHABET_IMGS_BASEDIR + letter):
+            for name in files:
+                px = preprocess_image(os.path.join(root, name))
+                predict, _ = predict_az(px)
+                num = confusion[letters.index(predict), letters.index(letter)] + 1
+                confusion[letters.index(predict), letters.index(letter)] = num
+    # accuracy and percision calcs
+    num_correct = 0
+    precision = np.zeros(24)
+    for i in range(24):
+        num_correct += confusion[i, i]
+        if np.sum(confusion, axis=1)[i] == 0:
+            precision[i] = 0
+        else:
+            precision[i] = confusion[i,i] / np.sum(confusion, axis=1)[i]
+    accuracy = num_correct / np.sum(confusion)
+    precision = np.mean(precision)
+    print('accuracy: ' + str(accuracy))
+    print('precision: ' + str(precision))
+    print(confusion)
+
+# use this method to test on a dataset with same sized images that can be processed as a batch and loaded from a saved
+# numpy array where preprocessing has already been done to save time
+def test(alpha_X_test, alpha_y_test):
+    alpha_predict_y = predict_az(alpha_X_test.reshape(-1, 200, 200), type=2)
+    #print(alpha_predict_y)
+
+    y1 = numeric_class(alpha_y_test)
+    y2 = numeric_class(alpha_predict_y)
+
+    print(sklearn.metrics.accuracy_score(y1, y2))
+    print(sklearn.metrics.precision_score(y1, y2, average='macro'))
+    print(sklearn.metrics.recall_score(y1, y2, average='macro'))
+    print(sklearn.metrics.confusion_matrix(y1, y2))
+
+# use this method to test one image, arg is the path to an image file
+def test_real_image(img_path):
+    test_img = preprocess_image(img_path)
+    res, vect = predict_az(test_img)
+    print(res)
+    print(vect)
+
+# Select testing regime.
+# SET = 1 corresponds to the noiseless dataset
+# SET = 2 corresponds to testing with team dataset (takes a long time to test b/c the images are all different sizes)
+# SET = 0 corresponds to the default option of the noisy set obtained online
+SET = 1
 
 if SET == 1:
-    data_X = get_training_arr('alpha_train_features_shuffled.npy')
-    data_y = get_training_arr('alpha_train_labels_shuffled.npy')
+    alpha_X_test = get_training_arr('alpha_validate_features_no_noise.npy')[:1000, :, :]
+    alpha_y_test = get_training_arr('alpha_validate_labels_no_noise.npy')[:1000, :]
+    print(alpha_X_test.shape, alpha_y_test.shape)
 
-    alpha_X_test = data_X[:100, :]
-    alpha_y_test = data_y[:100, :]
+    test(alpha_X_test, alpha_y_test)
+
+elif SET == 2:
+    test_images_alphabet()
+
 else:
     alpha_X_test = get_training_arr('alpha_test_inputs.npy')
     alpha_y_test = get_training_arr('alphabet_test_labels.npy')
+    print(alpha_X_test.shape, alpha_y_test.shape)
 
-alpha_predict_y = predict_az(alpha_X_test.reshape(-1, 200, 200), type=2)
-#print(alpha_predict_y)
-
-y1 = numeric_class(alpha_y_test)
-y2 = numeric_class(alpha_predict_y)
-
-print(sklearn.metrics.accuracy_score(y1, y2))
-print(sklearn.metrics.precision_score(y1, y2, average='macro'))
-print(sklearn.metrics.recall_score(y1, y2, average='macro'))
-print(sklearn.metrics.confusion_matrix(y1, y2))
-
-
-''' predict one real image'''
-test_img = preprocess_image(c.GWEN_P)
-#print(test_img)
-'''x = get_training_arr('x.npy')
-test_img = x[0]
-test_img = preprocess_image(test_img)'''
-
-'''plt.imshow((test_img * 255), cmap='gray')
-plt.show()'''
-
-
-res, vect = predict_az(test_img)
-print(res)
-print(vect)
-
-
+    test(alpha_X_test, alpha_y_test)

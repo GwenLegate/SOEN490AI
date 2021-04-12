@@ -31,26 +31,21 @@ def apply_noise(img_path):
     seed(time.time()) # For generating random numbers based on system time
 
     img = cv2.imread(img_path, 0)
-
-    # Do not apply the noise filter in 90% of images
-    if check_percentage(10):
-        return img
+    '''
+        0: gaussian noise
+        1: salt and pepper noise
+        2: poisson
+    '''
+    val = randint(0, 2)
+    val_seed = randint(0, 100) # For pseudo randomness in the noise application
+    if val == 0:
+       noisy_image = generate_random_noise(img, GAUSSIAN, val_seed)
+    elif val == 1:
+        noisy_image = generate_random_noise(img, SALT_PEPPER, val_seed)
     else:
-        '''
-            0: gaussian noise
-            1: salt and pepper noise
-            2: poisson
-        '''
-        val = randint(0, 2)
-        val_seed = randint(0, 100) # For pseudo randomness in the noise application
-        if val == 0:
-            noisy_image = generate_random_noise(img, GAUSSIAN, val_seed)
-        elif val == 1:
-            noisy_image = generate_random_noise(img, SALT_PEPPER, val_seed)
-        else:
-            noisy_image = generate_random_noise(img, POISSON, val_seed)
+        noisy_image = generate_random_noise(img, POISSON, val_seed)
 
-        return noisy_image
+    return noisy_image
 
 '''img = apply_noise(c.GWEN_B)
 plt.imshow(img)

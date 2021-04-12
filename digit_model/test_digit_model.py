@@ -7,6 +7,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from utilities.data_processing import *
+import constants as c
 
 ''' check for GPU, if no GPU, use CPU '''
 if torch.cuda.is_available():
@@ -17,12 +18,12 @@ else:
     print("Running on the CPU")
 device = torch.device("cpu")
 
-# alphabet model
+# digit model
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=3)
-        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=2)
+        self.conv2 = nn.Conv2d(16, 24, kernel_size=5, stride=1, padding=3)
         self.conv3 = nn.Conv2d(24, 32, kernel_size=3, stride=1, padding=2)
         self.conv4 = nn.Conv2d(32, 32, kernel_size=5, stride=1, padding=2)
         self.conv5 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=2)
@@ -34,7 +35,17 @@ class Net(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
+        x = x.cpu()
+        x = x.detach().numpy()
+        np.save('visualize_activation1.npy', x)
+        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
+
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
+        x = x.cpu()
+        x = x.detach().numpy()
+        np.save('visualize_activation2.npy', x)
+        x = torch.from_numpy(x).type('torch.FloatTensor').to(device)
+
         x = F.relu(F.max_pool2d(self.conv3(x), 2))
         x = F.relu(F.max_pool2d(self.conv4(x), 2))
         x = F.relu(F.max_pool2d(self.conv5(x), 2))
@@ -47,12 +58,6 @@ class Net(nn.Module):
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.fc2(x)  # this is output layer. No activation.
         return F.softmax(x, dim=1)
-
-'''testing'''
-digit_cnn = Net()
-digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/digit_model.pt", map_location=device))
-digit_cnn.cuda()
-digit_cnn.to('cpu') # puts model on cpu
 
 ''' returns predictions from the model.  The default type 1 will return the predicted letter, type 2 will return a 
 one-hot-vector prediction for the inputs that can be used for comparison with the labels'''
@@ -73,11 +78,47 @@ def predict_az(input, type=1):
     if type == 2:
         return predict_vect
 
-''' load testing X and y'''
-'''data_X = get_training_arr('digit_features_shuffled.npy')
-data_y = get_training_arr('digit_labels_shuffled.npy')
+def test_images_digit():
+    digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    confusion = np.zeros((10, 10), dtype=int)
+    for digit in digits:
+        print('testing ' + digit)
+        for root, dirs, files in os.walk(c.TEAM_DIGIT_IMGS_BASEDIR + digit):
+            for name in files:
+                px = preprocess_image(os.path.join(root, name))
+                predict = predict_az(px)
+                num = confusion[int(digit), predict] + 1
+                confusion[int(digit), predict] = num
+    # accuracy and percision calcs
+    num_correct = 0
+    precision = np.zeros(10)
+    for i in range(10):
+        num_correct += confusion[i, i]
+        if np.sum(confusion, axis=1)[i] == 0:
+            precision[i] = 0
+        else:
+            precision[i] = confusion[i,i] / np.sum(confusion, axis=1)[i]
+    accuracy = num_correct / np.sum(confusion)
+    precision = np.mean(precision)
+    print('accuracy: ' + str(accuracy))
+    print('precision: ' + str(precision))
+    print(confusion)
 
-digit_X_test = data_X[:1000, :]
+'''testing'''
+digit_cnn = Net()
+digit_cnn.load_state_dict(torch.load(c.MODEL_SAVE_PATH + "/digit_model.pt", map_location=device))
+digit_cnn.cuda()
+digit_cnn.to('cpu') # puts model on cpu
+
+# test using team noisy image dataset
+#test_images_digit()
+
+''' load testing X and y to test on noisless dataset'''
+data_X = get_training_arr("digit_features_shuffled_no_noise.npy")
+data_y = get_training_arr('digit_labels_shuffled_no_noise.npy')
+print(data_y.shape, data_X.shape)
+
+digit_X_test = data_X[:1000, :, :]
 alpha_y_test = data_y[:1000, :]
 
 alpha_predict_y = predict_az(digit_X_test.reshape(-1, 200, 200), type=2)
@@ -89,20 +130,7 @@ y2 = numeric_class(alpha_predict_y)
 print(sklearn.metrics.accuracy_score(y1, y2))
 print(sklearn.metrics.precision_score(y1, y2, average='macro'))
 print(sklearn.metrics.recall_score(y1, y2, average='macro'))
-print(sklearn.metrics.confusion_matrix(y1, y2))'''
+print(sklearn.metrics.confusion_matrix(y1, y2))
 
 
-''' predict one real image'''
-test_img = preprocess_image(c.GWEN5)
-#print(test_img)
-'''x = get_training_arr('x.npy')
-test_img = x[0]
-test_img = preprocess_image(test_img)'''
-
-'''plt.imshow((test_img * 255), cmap='gray')
-plt.show()'''
-
-
-result = predict_az(test_img)
-print(result)
 

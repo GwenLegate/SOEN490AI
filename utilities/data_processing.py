@@ -22,16 +22,30 @@ def check_balance(dict, labels):
 centered around the mean pixel value and normalized pixel values between 0-1 
 0 and 1'''
 def preprocess_image(image):
+    try:
+        _, _, color = np.asarray(Image.open(image)).shape
+    except AttributeError:
+        try:
+            _, _, color = image.shape
+        except ValueError:
+            color = 1
     # convert image to greyscale and np array
     try:
-        img = np.asarray(Image.open(image).convert('L'))
+        if color == 3 or color == 4:
+            img = np.asarray(Image.open(image).convert('L'))
+        else:
+            img = np.asarray(Image.open(image))
     except AttributeError:
-        img = Image.fromarray(image)
-        img = np.asarray(img.convert('L'))
+        if color == 3 or color == 4:
+            img = np.asarray(img.convert('L'))
+            img = np.asarray(img)
+        else:
+            img = Image.fromarray(image)
 
     #gaussian blur and sharpen edges then flatten image
     img = process_image(img)
     x, y = img.shape
+
     img = np.ravel(img)
 
     # center data around the mean
@@ -96,5 +110,6 @@ def swap(feat_X1, label_y1, feat_X2, label_y2):
         label_y2[i, :] = lab_temp
         feat_X2[i, :, :] = feat_temp
     return feat_X1, label_y1, feat_X2, label_y2
+
 
 

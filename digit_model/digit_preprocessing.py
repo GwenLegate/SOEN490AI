@@ -1,5 +1,6 @@
-import sys, os
+import sys, os, gc
 import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from utilities.data_processing import preprocess_image, get_training_arr, one_hot_vector, shuffle_set, swap

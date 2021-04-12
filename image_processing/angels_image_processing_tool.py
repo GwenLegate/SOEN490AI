@@ -8,7 +8,7 @@ def grayscale(img):
     return gray_img
 
 def apply_gaussian_blur(img):
-    gaussian = cv2.GaussianBlur(img, (5,5), 0)
+    gaussian = cv2.GaussianBlur(np.float32(img), (5,5), 0)
 
     return gaussian
 
